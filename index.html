@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="lo">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ScanShop Pro - POS</title>
+<title>ScanShop Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
@@ -14,6 +15,7 @@
   --border:rgba(0,229,255,0.12); --border2:rgba(255,255,255,0.06);
   --glow:0 0 24px rgba(0,229,255,0.35); --glow-g:0 0 24px rgba(0,255,136,0.4);
   --glow-r:0 0 24px rgba(255,61,113,0.4);
+  --r:18px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;overflow-x:hidden}
@@ -24,12 +26,21 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ══ PIN LOCK ══ */
-#pinLock{background:radial-gradient(ellipse at 50% -10%,rgba(0,229,255,0.12),transparent 60%),radial-gradient(ellipse at 90% 110%,rgba(255,61,113,0.08),transparent 50%),var(--bg);align-items:center;justify-content:center;position:relative;overflow:hidden}
-#pinLock::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 56px,rgba(0,229,255,0.018) 56px,rgba(0,229,255,0.018) 57px),repeating-linear-gradient(90deg,transparent,transparent 56px,rgba(0,229,255,0.018) 56px,rgba(0,229,255,0.018) 57px)}
+#pinLock{
+  background:radial-gradient(ellipse at 50% -10%,rgba(0,229,255,0.12),transparent 60%),
+            radial-gradient(ellipse at 90% 110%,rgba(255,61,113,0.08),transparent 50%),var(--bg);
+  align-items:center;justify-content:center;position:relative;overflow:hidden;
+}
+#pinLock::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 56px,rgba(0,229,255,0.018) 56px,rgba(0,229,255,0.018) 57px),
+             repeating-linear-gradient(90deg,transparent,transparent 56px,rgba(0,229,255,0.018) 56px,rgba(0,229,255,0.018) 57px);
+}
 .pin-wrap{position:relative;width:100%;max-width:340px;padding:0 24px;display:flex;flex-direction:column;align-items:center;gap:0}
 .pin-logo{width:80px;height:80px;border-radius:26px;background:conic-gradient(from 200deg,var(--accent),#7b2fff,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 0 40px rgba(0,229,255,0.45),0 0 80px rgba(0,229,255,0.15);animation:logoFloat 3s ease-in-out infinite;margin-bottom:22px}
 @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.pin-title{font-size:28px;font-weight:900;letter-spacing:-0.5px}.pin-title span{color:var(--accent)}
+.pin-title{font-size:28px;font-weight:900;letter-spacing:-0.5px}
+.pin-title span{color:var(--accent)}
 .pin-subtitle{color:var(--text-dim);font-size:14px;margin-top:4px;margin-bottom:32px;font-weight:300}
 .pin-label{font-size:14px;color:var(--text-mid);margin-bottom:14px;font-weight:500}
 .pin-dots{display:flex;gap:16px;margin-bottom:10px}
@@ -37,1070 +48,1144 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 .pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px var(--accent)}
 .pin-dot.error{background:var(--accent2);border-color:var(--accent2);box-shadow:var(--glow-r);animation:shake .4s ease}
 @keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.pin-error{font-size:13px;color:var(--accent2);min-height:20px;margin-bottom:20px;font-weight:500}
+.pin-error{font-size:13px;color:var(--accent2);min-height:20px;margin-bottom:20px;font-weight:500;transition:opacity .3s}
 .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:300px}
-.pin-key{aspect-ratio:1.2;border-radius:16px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'Kanit',sans-serif;font-size:24px;font-weight:700;cursor:pointer;transition:background .15s,transform .12s;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.pin-key{aspect-ratio:1.2;border-radius:16px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'Kanit',sans-serif;font-size:24px;font-weight:700;cursor:pointer;transition:background .15s,transform .12s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;position:relative;overflow:hidden}
 .pin-key:active{transform:scale(.93);background:var(--surface3)}
 .pin-key.zero{grid-column:2}
 .pin-key.del{background:transparent;border-color:transparent;color:var(--text-mid);font-size:22px}
 .pin-key.del:active{background:var(--surface2)}
+.pin-key-sub{font-size:8px;letter-spacing:1.5px;color:var(--text-dim);font-weight:400}
+.pin-ripple{position:absolute;border-radius:50%;background:rgba(0,229,255,0.2);animation:ripple .4s ease-out forwards;pointer-events:none}
+@keyframes ripple{from{transform:scale(0);opacity:1}to{transform:scale(4);opacity:0}}
+.pin-attempt{font-size:12px;color:var(--text-dim);margin-top:16px}
+.pin-lockout{display:none;text-align:center;color:var(--accent2);font-size:14px;padding:16px 0}
+.pin-lockout-timer{font-size:28px;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent2);margin-top:6px}
 
 /* ══ HOME ══ */
-#home{background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.08),transparent 60%),var(--bg);align-items:center;justify-content:center;position:relative;overflow:hidden}
+#home{background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.08),transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(255,61,113,0.06),transparent 50%),var(--bg);align-items:center;justify-content:center;position:relative;overflow:hidden}
+#home::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(0,229,255,0.02) 60px,rgba(0,229,255,0.02) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(0,229,255,0.02) 60px,rgba(0,229,255,0.02) 61px)}
 .home-content{position:relative;text-align:center;padding:40px 24px;width:100%}
 .app-logo{width:90px;height:90px;border-radius:28px;background:conic-gradient(from 180deg,var(--accent),#7b2fff,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 22px;box-shadow:0 0 40px rgba(0,229,255,0.4),0 0 80px rgba(0,229,255,0.15);animation:logoFloat 3s ease-in-out infinite}
-.app-title{font-size:36px;font-weight:900;letter-spacing:-1px}.app-title span{color:var(--accent)}
+.app-title{font-size:36px;font-weight:900;letter-spacing:-1px}
+.app-title span{color:var(--accent)}
 .app-subtitle{color:var(--text-dim);font-size:14px;margin-top:5px;font-weight:300}
 .home-btns{margin-top:44px;display:flex;flex-direction:column;gap:13px;width:100%;max-width:310px;margin-left:auto;margin-right:auto}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;font-family:'Kanit',sans-serif;font-size:17px;font-weight:700;border:none;border-radius:16px;padding:17px 28px;cursor:pointer;box-shadow:var(--glow);transition:transform .13s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;font-family:'Kanit',sans-serif;font-size:17px;font-weight:700;border:none;border-radius:16px;padding:17px 28px;cursor:pointer;box-shadow:var(--glow);transition:transform .13s;letter-spacing:.3px}
 .btn-primary:active{transform:scale(.97)}
-.btn-secondary{background:transparent;color:var(--accent);font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;border:1.5px solid var(--border);border-radius:16px;padding:15px 28px;cursor:pointer}
+.btn-secondary{background:transparent;color:var(--accent);font-family:'Kanit',sans-serif;font-size:15px;font-weight:500;border:1.5px solid var(--border);border-radius:16px;padding:15px 28px;cursor:pointer;transition:border-color .2s,background .2s}
+.btn-secondary:hover{border-color:var(--accent);background:rgba(0,229,255,0.06)}
 .btn-danger{background:rgba(255,61,113,0.1);color:var(--accent2);font-family:'Kanit',sans-serif;font-size:14px;font-weight:500;border:1.5px solid rgba(255,61,113,0.2);border-radius:16px;padding:13px 28px;cursor:pointer}
-.status-bar{font-size:11px;margin-top:8px;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3)}.status-dot.offline{background:var(--accent4)}.status-dot.error{background:var(--accent2)}
+.sync-status{font-size:11px;margin-top:8px;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:5px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3)}
+.sync-dot.offline{background:var(--accent4)}
+.sync-dot.error{background:var(--accent2)}
 
 /* ══ SCANNER ══ */
-#scanner{background:var(--bg);overflow-y:auto;padding-bottom:100px}
-.page-header{padding:20px 16px 12px;display:flex;align-items:center;gap:12px;background:var(--surface3);border-bottom:1px solid var(--border)}
+#scanner{background:var(--bg);overflow-y:auto;padding-bottom:90px}
+.page-header{padding:20px 16px 12px;display:flex;align-items:center;gap:12px}
 .back-btn{width:40px;height:40px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex-shrink:0}
 .page-header h2{font-size:20px;font-weight:700;flex:1}
-.header-stat{font-size:11px;color:var(--text-dim);padding:6px 10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);white-space:nowrap}
 
-.search-bar{margin:12px 16px;display:flex;gap:8px;align-items:center}
-.search-input{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-family:'Kanit',sans-serif;font-size:14px;outline:none}
-.search-input:focus{border-color:var(--accent)}
-.search-btn{width:40px;height:40px;border-radius:12px;background:var(--accent);border:none;color:#000;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* ══ AUTO SCANNER AREA ══ */
+.scanner-container{margin:0 16px;border-radius:20px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.scanner-modes{display:flex;gap:8px}
+.mode-btn{flex:1;padding:10px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface3);color:var(--text-mid);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Kanit',sans-serif}
+.mode-btn.active{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border-color:var(--accent);box-shadow:var(--glow)}
+.mode-btn:active{transform:scale(.95)}
 
-.category-scroll{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;-webkit-overflow-scrolling:touch}
-.category-chip{flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;color:var(--text-mid)}
-.category-chip.active{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border-color:var(--accent);box-shadow:var(--glow)}
+.auto-scanner{display:flex;flex-direction:column;gap:12px}
+.camera-area{position:relative;border-radius:16px;overflow:hidden;background:#000;width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center}
+#cameraFeed{width:100%;height:100%;object-fit:cover;display:block}
+.scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.scan-frame{width:160px;height:160px;position:relative}
+.scan-frame::before,.scan-frame::after,.sc-br,.sc-bl{content:'';position:absolute;width:28px;height:28px;border-color:var(--accent);border-style:solid}
+.scan-frame::before{top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0}
+.scan-frame::after{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0}
+.sc-br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0}
+.sc-bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px}
+.scan-line{position:absolute;left:12px;right:12px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 12px var(--accent);animation:scanMove 1.2s ease-in-out infinite;top:50%}
+@keyframes scanMove{0%{top:10%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:90%;opacity:0}}
 
-.products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 16px;padding-bottom:100px}
-.product-card{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative}
-.product-card:active{transform:scale(.98)}
-.product-card:hover{border-color:rgba(0,229,255,.3)}
-.product-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface2)}
-.product-info{padding:10px}
-.product-name{font-size:13px;font-weight:600;line-height:1.3}
-.product-price{font-size:14px;font-weight:700;color:var(--accent3);font-family:'Space Mono',monospace;margin-top:4px}
-.product-stock{font-size:10px;color:var(--text-dim);margin-top:2px}
-.product-actions{position:absolute;top:8px;right:8px;display:flex;gap:4px}
-.product-btn{background:rgba(0,0,0,.7);border:none;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;font-size:13px}
-.product-btn.edit{color:var(--accent)}
-.product-btn.delete{color:var(--accent2)}
+.scan-status{font-size:12px;color:var(--text-mid);text-align:center;font-weight:500}
+.scan-timer{font-size:32px;font-weight:800;font-family:'Space Mono',monospace;color:var(--accent3);text-align:center;min-height:36px}
 
-.cart-container{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--surface);border-top:1.5px solid var(--border);padding:12px 16px 20px;max-height:40dvh;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
-.cart-container.hidden{display:none}
-.cart-header{display:flex;justify-content:space-between;align-items:center;font-weight:700}
-.cart-list{display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto;min-height:0}
-.cart-item{background:var(--surface2);border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px;font-size:13px}
-.cart-item-name{flex:1}.cart-item-price{font-weight:700;color:var(--accent3);font-family:'Space Mono',monospace}
-.qty-control{display:flex;gap:4px;align-items:center}
-.qty-btn-sm{width:22px;height:22px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
-.qty-num-sm{font-weight:700;min-width:16px;text-align:center}
-.cart-remove{background:transparent;border:none;color:var(--accent2);cursor:pointer;font-size:14px}
+.scanner-actions{display:flex;gap:8px}
+.scanner-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.scanner-btn.start{background:linear-gradient(135deg,var(--accent3),#00cc66);color:#000;box-shadow:var(--glow-g)}
+.scanner-btn.start:active{transform:scale(.95)}
+.scanner-btn.stop{background:rgba(255,61,113,0.15);color:var(--accent2);border:1.5px solid rgba(255,61,113,0.3)}
+.scanner-btn.upload{background:rgba(0,229,255,0.1);color:var(--accent);border:1.5px solid var(--border)}
 
-.cart-footer{display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
-.cart-total{flex:1}
-.total-label{font-size:11px;color:var(--text-dim)}.total-value{font-size:20px;font-weight:800;color:var(--accent3);font-family:'Space Mono',monospace}
-.cart-actions{display:flex;gap:6px}
-.btn-sm{flex:1;padding:8px 12px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-clear{background:rgba(255,61,113,0.2);color:var(--accent2)}
-.btn-checkout{background:linear-gradient(135deg,var(--accent3),#00b360);color:#000;box-shadow:var(--glow-g)}
-.btn-checkout:active{transform:scale(.95)}
+/* ══ MANUAL UPLOAD ══ */
+.upload-section{margin:0 16px 16px}
+.upload-label{font-size:13px;color:var(--text-dim);margin-bottom:10px;font-weight:500;display:block}
+.upload-area{border:2px dashed var(--border);border-radius:14px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(0,229,255,0.03)}
+.upload-area:hover{border-color:var(--accent);background:rgba(0,229,255,0.08)}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-text{font-size:13px;color:var(--text-mid)}.upload-text b{color:var(--accent)}
+#uploadInput{display:none}
 
-/* ══ PRODUCTS PAGE ══ */
-#products{background:var(--bg);overflow-y:auto;padding-bottom:90px}
-.section-header{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface3);z-index:50}
-.section-header h2{font-size:18px;font-weight:700}
-.add-product-btn{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:12px;padding:10px 16px;font-family:'Kanit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+/* ══ MATCH RESULT ══ */
+.match-result{margin:0 16px 16px;border-radius:14px;padding:16px;border:1px solid var(--border);background:var(--surface2);display:none}
+.match-result.show{display:block;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.match-result.success{border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.06)}
+.match-result.error{border-color:rgba(255,61,113,0.3);background:rgba(255,61,113,0.06)}
+.match-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.match-icon{font-size:24px}
+.match-info h4{font-size:15px;font-weight:700;margin-bottom:2px}
+.match-info p{font-size:12px;color:var(--text-dim)}
+.match-details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.match-item{background:var(--surface3);padding:10px;border-radius:10px;text-align:center}
+.match-item-label{font-size:11px;color:var(--text-dim);margin-bottom:4px}
+.match-item-value{font-size:14px;font-weight:600;color:var(--accent)}
+.match-img{width:100%;border-radius:10px;object-fit:cover;margin-top:12px;max-height:160px}
 
-.products-list{display:flex;flex-direction:column;gap:8px;padding:12px 16px}
-.product-row{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;gap:12px;align-items:center}
-.product-row img{width:60px;height:60px;border-radius:10px;object-fit:cover;background:var(--surface2)}
-.product-row-info{flex:1}
-.product-row-name{font-size:14px;font-weight:700}.product-row-meta{font-size:11px;color:var(--text-dim);margin-top:3px}
-.product-row-price{font-size:15px;font-weight:800;color:var(--accent3);font-family:'Space Mono',monospace}
-.product-row-actions{display:flex;gap:6px;flex-shrink:0}
-.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
-.icon-btn:active{color:var(--accent)}.icon-btn.danger{color:var(--accent2)}
+/* ══ CART & BOTTOM NAV ══ */
+.list-section{padding:12px 16px 0}
+.list-section h3{font-size:13px;color:var(--text-dim);margin-bottom:8px;font-weight:500}
+.scanned-list{display:flex;flex-direction:column;gap:7px}
+.scanned-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);transition:all .2s}
+.scanned-item:active{transform:scale(.98);background:var(--surface3)}
+.scanned-img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:var(--surface3)}
+.scanned-info{flex:1}
+.scanned-name{font-size:14px;font-weight:600}
+.scanned-price{font-size:12px;color:var(--accent3)}
+.scanned-qty{font-size:13px;color:var(--text-dim);margin-top:2px}
+.scanned-remove{width:32px;height:32px;border-radius:8px;background:rgba(255,61,113,0.1);border:none;color:var(--accent2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.scanned-remove:active{background:rgba(255,61,113,0.2)}
 
-/* ══ HISTORY PAGE ══ */
-#history{background:var(--bg);overflow-y:auto;padding-bottom:80px}
-.history-header{padding:16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:var(--surface3)}
-.history-filters{display:flex;gap:8px;padding:12px 16px;overflow-x:auto}
-.filter-btn{flex-shrink:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .2s}
-.filter-btn.active{background:var(--accent);color:#000;border-color:var(--accent)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:80px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 16px}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:var(--text-dim);transition:color .2s;text-align:center}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:20px}
+.nav-label{font-size:10px;font-weight:500}
 
-.history-list{display:flex;flex-direction:column;gap:8px;padding:12px 16px}
-.receipt-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;cursor:pointer;transition:all .2s}
-.receipt-card:active{background:var(--surface2)}
-.receipt-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.receipt-no{font-weight:700;font-size:13px;color:var(--accent)}
-.receipt-date{font-size:11px;color:var(--text-dim)}
-.receipt-total{font-size:16px;font-weight:800;color:var(--accent3);font-family:'Space Mono',monospace}
-.receipt-count{font-size:12px;color:var(--text-dim);margin-top:4px}
+/* ══ PROFILE PAGE ══ */
+#profile{background:var(--bg);overflow-y:auto;padding-bottom:90px}
+.profile-header{padding:28px 16px 20px;text-align:center;position:relative}
+.profile-header::before{content:'';position:absolute;top:0;left:0;right:0;height:60px;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(0,255,136,0.06));border-radius:0 0 20px 20px}
+.profile-avatar{width:80px;height:80px;border-radius:20px;background:conic-gradient(from 180deg,var(--accent),#7b2fff,var(--accent2),var(--accent));margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;border:2px solid var(--border);box-shadow:0 0 30px rgba(0,229,255,0.25)}
+.profile-name{font-size:22px;font-weight:700;margin-bottom:4px}
+.profile-status{font-size:12px;color:var(--text-dim)}
 
-/* ══ NAVBAR ══ */
-.navbar{position:fixed;bottom:0;left:0;right:0;z-index:99;background:rgba(8,8,16,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;padding:8px 0 max(8px,env(safe-area-inset-bottom))}
-.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:'Kanit',sans-serif;font-size:10px;padding:6px 16px;border-radius:11px;transition:color .2s}
-.nav-btn.active{color:var(--accent)}
-.nav-btn svg{width:20px;height:20px}
+.profile-scans{padding:0 16px 16px}
+.profile-scans h3{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text)}
+.scans-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.scan-card{border-radius:12px;overflow:hidden;background:var(--surface2);border:1px solid var(--border);transition:all .2s}
+.scan-card:active{transform:scale(.97);border-color:var(--accent)}
+.scan-card-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface3)}
+.scan-card-info{padding:10px}
+.scan-card-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scan-card-price{font-size:12px;color:var(--accent3);margin-top:4px;font-weight:600}
 
-/* ══ MODALS ══ */
-.modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:flex-end;animation:slideUp .3s ease}
-.modal-backdrop.open{display:flex}
-@keyframes slideUp{from{opacity:0}to{opacity:1}}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 18px max(24px,env(safe-area-inset-bottom));width:100%;max-height:90dvh;overflow-y:auto;animation:modalSlide .28s cubic-bezier(.34,1.3,.64,1)}
-@keyframes modalSlide{from{transform:translateY(100%)}to{transform:none}}
-.modal h3{font-size:18px;font-weight:700;margin-bottom:16px}
-.form-group{margin-bottom:12px}
-.form-label{font-size:12px;color:var(--text-dim);margin-bottom:5px;display:block;font-weight:500}
-.form-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Kanit',sans-serif;font-size:14px;outline:none}
-.form-input:focus{border-color:var(--accent)}
-textarea.form-input{resize:vertical;min-height:80px}
-.form-row{display:flex;gap:8px}.form-row input{flex:1}
-.form-group select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'Kanit',sans-serif;font-size:14px;outline:none}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 16px 16px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.stat-number{font-size:24px;font-weight:800;color:var(--accent)}.stat-label{font-size:11px;color:var(--text-dim);margin-top:4px}
 
-.photo-upload{width:100%;aspect-ratio:16/9;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--text-dim);font-size:13px;overflow:hidden;position:relative;transition:all .2s}
-.photo-upload:hover{border-color:rgba(0,229,255,.3)}
-.photo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.photo-input{display:none}
+/* ══ MODALS & OVERLAYS ══ */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-end;z-index:1000;animation:modalSlideIn .3s ease}
+.modal.open{display:flex}
+@keyframes modalSlideIn{from{opacity:0}to{opacity:1}}
+.modal-content{background:var(--surface);width:100%;border-radius:20px 20px 0 0;padding:24px;max-height:85dvh;overflow-y:auto}
+.modal-header{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{width:32px;height:32px;border-radius:10px;background:var(--surface2);border:none;color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
 
-.modal-buttons{display:flex;gap:10px;margin-top:16px}
-.btn-modal{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
-.btn-modal-cancel{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
-.btn-modal-save{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;box-shadow:var(--glow)}
-.btn-modal-save:active{transform:scale(.97)}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-family:'Kanit',sans-serif;font-size:14px;transition:border-color .2s}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 12px rgba(0,229,255,0.15)}
+.form-textarea{min-height:100px;resize:none}
 
-.confirm-modal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px}
-.confirm-modal.open{display:flex}
-.confirm-box{background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:320px;animation:popIn .3s ease}
-@keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-.confirm-box h3{font-size:16px;font-weight:700;margin-bottom:8px;text-align:center}
-.confirm-box p{font-size:13px;color:var(--text-dim);text-align:center;margin-bottom:20px;line-height:1.5}
-.confirm-btns{display:flex;gap:10px}
-.confirm-btns button{flex:1;padding:11px;border-radius:10px;border:none;font-family:'Kanit',sans-serif;font-weight:600;cursor:pointer}
-.confirm-cancel{background:var(--surface2);border:1px solid var(--border);color:var(--text)}
-.confirm-ok{background:linear-gradient(135deg,var(--accent3),#00b360);color:#000;box-shadow:var(--glow-g)}
-.confirm-delete{background:linear-gradient(135deg,var(--accent2),#c0002a);color:#fff;box-shadow:var(--glow-r)}
+.photo-upload-area{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:12px;transition:all .2s}
+.photo-upload-area:hover{border-color:var(--accent);background:rgba(0,229,255,0.05)}
+.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:12px;display:none}
 
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;z-index:400;white-space:nowrap;opacity:0;pointer-events:none;transition:all .25s}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.modal-actions{display:flex;gap:10px;margin-top:24px}
+.modal-actions button{flex:1;padding:13px;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:600;cursor:pointer;font-size:14px;transition:all .2s}
+.btn-save{background:linear-gradient(135deg,var(--accent),#007acc);color:#000;box-shadow:var(--glow)}
+.btn-save:active{transform:scale(.95)}
+.btn-cancel{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
 
-.loading{position:fixed;inset:0;z-index:500;background:rgba(8,8,16,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .2s}
-.loading.show{opacity:1;pointer-events:all}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+/* ══ LOADING & TOAST ══ */
+#loadingOverlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(2px)}
+#loadingOverlay:not(.hidden){display:flex}
+.loading-content{text-align:center}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:var(--text-mid)}
+#loadingMsg{font-size:14px;color:var(--text)}
 
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--surface3);padding:12px 20px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .3s;z-index:1500;white-space:nowrap}
+#toast.show{opacity:1;pointer-events:auto}
+
+.hidden{display:none !important}
 </style>
 </head>
 <body>
 
-<!-- Loading -->
-<div class="loading" id="loading">
-  <div class="spinner"></div>
-  <p class="loading-text" id="loadingText">ກຳລັງໂຫລດ…</p>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- ══ PIN LOCK ══ -->
-<div class="page active" id="pinLock">
+<!-- ════ PIN LOCK ════ -->
+<div id="pinLock" class="page active">
   <div class="pin-wrap">
-    <div class="pin-logo">🛒</div>
-    <div class="pin-title">ScanShop<span>Pro</span></div>
-    <div class="pin-subtitle">ລະບົບ POS ມືອາຊີບ</div>
-    <div class="pin-label">ໃສ່ລະຫັດ PIN 6 ຕົວ</div>
-    <div class="pin-dots" id="pinDots">
-      <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
-      <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
-      <div class="pin-dot" id="d4"></div><div class="pin-dot" id="d5"></div>
-    </div>
-    <div class="pin-error" id="pinError">&nbsp;</div>
-    <div class="pin-pad" id="pinPad">
-      <button class="pin-key" onclick="pinTap(this,'1')">1</button>
-      <button class="pin-key" onclick="pinTap(this,'2')">2</button>
-      <button class="pin-key" onclick="pinTap(this,'3')">3</button>
-      <button class="pin-key" onclick="pinTap(this,'4')">4</button>
-      <button class="pin-key" onclick="pinTap(this,'5')">5</button>
-      <button class="pin-key" onclick="pinTap(this,'6')">6</button>
-      <button class="pin-key" onclick="pinTap(this,'7')">7</button>
-      <button class="pin-key" onclick="pinTap(this,'8')">8</button>
-      <button class="pin-key" onclick="pinTap(this,'9')">9</button>
-      <div></div>
-      <button class="pin-key zero" onclick="pinTap(this,'0')">0</button>
-      <button class="pin-key del" onclick="pinDel()">⌫</button>
-    </div>
+    <div class="pin-logo">🔐</div>
+    <h1 class="pin-title">Scan<span>Shop</span></h1>
+    <p class="pin-subtitle">ระบบจัดการสินค้า Pro</p>
+    <label class="pin-label">ใส่รหัส PIN (6 หลัก)</label>
+    <div class="pin-dots" id="pinDots"></div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-pad" id="pinPad"></div>
     <div class="pin-attempt" id="pinAttempt"></div>
+    <div class="pin-lockout" id="pinLockout">
+      <div>🔒 ถูกล็อก</div>
+      <div class="pin-lockout-timer" id="lockoutTimer"></div>
+    </div>
   </div>
 </div>
 
-<!-- ══ HOME ══ -->
-<div class="page" id="home">
+<!-- ════ HOME ════ -->
+<div id="home" class="page">
   <div class="home-content">
-    <div class="app-logo">🛒</div>
-    <div class="app-title">ScanShop<span>Pro</span></div>
-    <div class="app-subtitle">POS | ຣລລາຍລະອຽດສຳຄັນ | ລາຍລະອຽດລາວ</div>
+    <div class="app-logo">📦</div>
+    <h1 class="app-title">Scan<span>Shop</span></h1>
+    <p class="app-subtitle">ระบบสแกนและจัดการสินค้า</p>
     <div class="home-btns">
-      <button class="btn-primary" onclick="beepClick();goTo('scanner')">📷 ເລີ່ມຂາຍ</button>
-      <button class="btn-secondary" onclick="beepClick();goTo('products')">📦 ສະມຸດສິນຄ້າ</button>
-      <button class="btn-secondary" onclick="beepClick();goTo('history')">📋 ປະຫວັດໃບເສີ້ຼຍ</button>
-      <button class="btn-secondary" onclick="beepClick();syncCloud()">☁️ ຊິ້ງ Cloud</button>
-      <button class="btn-danger" onclick="beepErr();confirmLogout()">🔒 ອອກຈາກລະບົບ</button>
+      <button class="btn-primary" onclick="startScanner()">🔍 สแกนสินค้า</button>
+      <button class="btn-secondary" onclick="goProfile()">👤 โปรไฟล์</button>
     </div>
-    <div class="status-bar">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">ກຳລັງກວດສອບ…</span>
+    <div class="sync-status">
+      <span class="sync-dot"></span> พร้อม
     </div>
   </div>
 </div>
 
-<!-- ══ SCANNER (POS) ══ -->
-<div class="page" id="scanner">
+<!-- ════ SCANNER ════ -->
+<div id="scanner" class="page">
   <div class="page-header">
-    <button class="back-btn" onclick="beepClick();goTo('home')">←</button>
-    <h2>ຈຸດຂາຍ</h2>
-    <span class="header-stat" id="cartCount">0 ລາຍການ</span>
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2>สแกนสินค้า</h2>
   </div>
 
-  <div class="search-bar">
-    <input type="text" class="search-input" id="searchInput" placeholder="ຄົ້ນຫາສິນຄ້າ…" onkeyup="filterProducts()">
-    <button class="search-btn" onclick="beepClick();filterProducts()">🔍</button>
-  </div>
-
-  <div class="category-scroll" id="categoryScroll"></div>
-
-  <div class="products-grid" id="productsGrid"></div>
-
-  <!-- CART -->
-  <div class="cart-container" id="cartContainer">
-    <div class="cart-header">
-      <span>🛒 ລາຍການສັ່ງຊື້</span>
-      <span id="cartItemCount">0</span>
+  <!-- AUTO SCANNER -->
+  <div class="scanner-container">
+    <div class="scanner-modes">
+      <button class="mode-btn active" onclick="setMode('auto')">🤖 สแกนอัตโนมัติ</button>
+      <button class="mode-btn" onclick="setMode('upload')">📤 อัพโหลดรูป</button>
     </div>
-    <div class="cart-list" id="cartList"></div>
-    <div class="cart-footer">
-      <div class="cart-total">
-        <div class="total-label">ຍອດລວມ</div>
-        <div class="total-value" id="cartTotal">₭0</div>
+
+    <div class="auto-scanner" id="autoScanner">
+      <div class="camera-area">
+        <video id="cameraFeed" autoplay playsinline muted></video>
+        <div class="scan-overlay">
+          <div class="scan-frame">
+            <div class="scan-line"></div>
+          </div>
+        </div>
+        <div class="cam-placeholder" id="camPlaceholder">
+          <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="12" stroke="currentColor" stroke-width="2"/>
+            <rect x="8" y="8" width="44" height="44" rx="8" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <span>กำลังเปิดกล้อง...</span>
+        </div>
       </div>
-      <div class="cart-actions">
-        <button class="btn-sm btn-clear" onclick="beepErr();clearCart()">ລ້າງ</button>
-        <button class="btn-sm btn-checkout" onclick="beepOk();openCheckout()">ຊຳລະ ➜</button>
+
+      <div class="scan-status">สร้างเรดี้ สแกนได้ทันที</div>
+      <div class="scan-timer" id="scanTimer"></div>
+
+      <div class="scanner-actions">
+        <button class="scanner-btn start" onclick="startScan()" id="startBtn">▶ เริ่มสแกน</button>
+        <button class="scanner-btn stop" onclick="stopScan()" id="stopBtn" style="display:none">⏹ หยุด</button>
       </div>
     </div>
+
+    <!-- UPLOAD MODE -->
+    <div id="uploadMode" style="display:none">
+      <label class="upload-label">เลือกรูปภาพสินค้า</label>
+      <div class="upload-area" onclick="document.getElementById('uploadInput').click()">
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">คลิกเพื่อเลือก หรือ<br><b>ลากไฟล์มาวาง</b></div>
+      </div>
+      <input type="file" id="uploadInput" accept="image/*" onchange="handleImageUpload(event)">
+    </div>
+  </div>
+
+  <!-- MATCH RESULT -->
+  <div class="match-result" id="matchResult">
+    <div class="match-header">
+      <div class="match-icon" id="matchIcon">✓</div>
+      <div class="match-info">
+        <h4 id="matchTitle">พบสินค้า</h4>
+        <p id="matchDesc">ความคล้ายคลึง 95%</p>
+      </div>
+    </div>
+    <div class="match-details" id="matchDetails"></div>
+    <img id="matchImg" class="match-img" src="">
+  </div>
+
+  <!-- SCANNED LIST -->
+  <div class="list-section" id="scanListSection" style="display:none">
+    <h3>📦 สินค้าที่สแกนแล้ว</h3>
+    <div class="scanned-list" id="scannedList"></div>
   </div>
 </div>
 
-<!-- ══ PRODUCTS ══ -->
-<div class="page" id="products">
-  <div class="section-header">
-    <h2>ສະມຸດສິນຄ້າ</h2>
-    <button class="add-product-btn" onclick="beepClick();openAddProduct()">➕ ເພີ່ມ</button>
+<!-- ════ PROFILE ════ -->
+<div id="profile" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <h2>โปรไฟล์</h2>
   </div>
-  <div class="products-list" id="productsList"></div>
-  <div class="navbar">
-    <button class="nav-btn" onclick="beepClick();goTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>ໜ້າຫຼັກ</button>
-    <button class="nav-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>ສິນຄ້າ</button>
-    <button class="nav-btn" onclick="beepClick();goTo('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/><polyline points="12 7 12 12 16 14"/></svg>ປະຫວັດ</button>
+
+  <div class="profile-header">
+    <div class="profile-avatar">📊</div>
+    <h3 class="profile-name">สินค้าของฉัน</h3>
+    <p class="profile-status">ระบบจัดการสินค้าแบบมืออาชีพ</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-number" id="totalProducts">0</div>
+      <div class="stat-label">รวมทั้งหมด</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="totalScans">0</div>
+      <div class="stat-label">การสแกน</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number" id="totalValue">0</div>
+      <div class="stat-label">มูลค่า</div>
+    </div>
+  </div>
+
+  <div class="profile-scans">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <h3>📸 รูปภาพสินค้า</h3>
+      <button class="btn-primary" style="padding:6px 12px;font-size:12px" onclick="openAddModal()">+ เพิ่ม</button>
+    </div>
+    <div class="scans-grid" id="scansGrid"></div>
   </div>
 </div>
 
-<!-- ══ HISTORY ══ -->
-<div class="page" id="history">
-  <div class="history-header">
-    <h2>ປະຫວັດໃບເສີ້ຼຍ</h2>
-  </div>
-  <div class="history-filters">
-    <button class="filter-btn active" onclick="beepClick();filterHistory('all')">ທັງໝົດ</button>
-    <button class="filter-btn" onclick="beepClick();filterHistory('today')">ມື້ນີ້</button>
-    <button class="filter-btn" onclick="beepClick();filterHistory('week')">ອາທິດນີ້</button>
-    <button class="filter-btn" onclick="beepClick();filterHistory('month')">ເດືອນນີ້</button>
-  </div>
-  <div class="history-list" id="historyList"></div>
-  <div class="navbar">
-    <button class="nav-btn" onclick="beepClick();goTo('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>ໜ້າຫຼັກ</button>
-    <button class="nav-btn" onclick="beepClick();goTo('products')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>ສິນຄ້າ</button>
-    <button class="nav-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/><polyline points="12 7 12 12 16 14"/></svg>ປະຫວັດ</button>
-  </div>
-</div>
+<!-- ════ ADD/EDIT PRODUCT MODAL ════ -->
+<div id="addModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="modalTitle">เพิ่มสินค้าใหม่</span>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
 
-<!-- ══ MODALS ══ -->
-<!-- Add/Edit Product -->
-<div class="modal-backdrop" id="productModal">
-  <div class="modal">
-    <h3 id="productModalTitle">ເພີ່ມສິນຄ້າ</h3>
     <div class="form-group">
-      <label class="form-label">ຮູບສິນຄ້າ</label>
-      <div class="photo-upload" onclick="document.getElementById('productPhoto').click()">
-        <img id="photoPreview" style="display:none">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <span>ເລືອກຮູບສິນຄ້າ</span>
-      </div>
-      <input type="file" id="productPhoto" class="photo-input" accept="image/*" onchange="handleProductPhoto(event)">
+      <label class="form-label">ชื่อสินค้า *</label>
+      <input type="text" id="inputName" class="form-input" placeholder="เช่น iPhone 15 Pro">
     </div>
-    <div class="form-row">
-      <div class="form-group" style="flex:1">
-        <label class="form-label">ຊື່ສິນຄ້າ *</label>
-        <input type="text" class="form-input" id="productName" placeholder="ຊື່ສິນຄ້າ">
-      </div>
-      <div class="form-group" style="flex:1">
-        <label class="form-label">ລາຄາ (₭) *</label>
-        <input type="number" class="form-input" id="productPrice" placeholder="0" min="0">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group" style="flex:1">
-        <label class="form-label">ໝວດໝູ່</label>
-        <select id="productCategory">
-          <option value="ອື່ນໆ">ອື່ນໆ</option>
-          <option value="ອາຫານ">ອາຫານ</option>
-          <option value="ເຫຼົ້າ">ເຫຼົ້າ</option>
-          <option value="ເຄື່ອງດື່ມ">ເຄື່ອງດື່ມ</option>
-          <option value="ບຸນກກະວາລ">ບຸນກກະວາລ</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:1">
-        <label class="form-label">ສຕັອກ</label>
-        <input type="number" class="form-input" id="productStock" placeholder="0" min="0">
-      </div>
-    </div>
+
     <div class="form-group">
-      <label class="form-label">ລາຍລະອຽດ</label>
-      <textarea class="form-input" id="productDetail" placeholder="ລາຍລະອຽດສິນຄ້າ…"></textarea>
+      <label class="form-label">ราคา *</label>
+      <input type="number" id="inputPrice" class="form-input" placeholder="0.00" step="0.01">
     </div>
-    <div class="modal-buttons">
-      <button class="btn-modal btn-modal-cancel" onclick="beepClick();closeProductModal()">ຍົກເລີກ</button>
-      <button class="btn-modal btn-modal-save" onclick="beepOk();saveProduct()">ບັນທຶກ</button>
+
+    <div class="form-group">
+      <label class="form-label">รายละเอียด</label>
+      <textarea id="inputDetail" class="form-input form-textarea" placeholder="คำอธิบายเพิ่มเติม..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">รูปภาพสินค้า</label>
+      <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+        <div id="photoLabel">
+          <div style="font-size:28px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;color:var(--text-mid)">คลิกเพื่อเลือกรูป</div>
+        </div>
+        <img id="photoPreview" class="photo-preview" src="">
+      </div>
+      <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveProduct()">💾 บันทึก</button>
+      <button class="btn-cancel" onclick="closeAddModal()">ยกเลิก</button>
     </div>
   </div>
 </div>
 
-<!-- Checkout -->
-<div class="modal-backdrop" id="checkoutModal">
-  <div class="modal">
-    <h3>ຊຳລະເງິນ</h3>
-    <div class="form-group">
-      <label class="form-label">ຊື່ລູກຄ້າ (ບໍ່ຈຳເປັນ)</label>
-      <input type="text" class="form-input" id="customerName" placeholder="ຊື່ລູກຄ້າ">
+<!-- ════ DELETE MODAL ════ -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>ลบสินค้า</span>
+      <button class="modal-close" onclick="document.getElementById('deleteModal').classList.remove('open')">✕</button>
     </div>
-    <div class="form-group">
-      <label class="form-label">ວິທີຊຳລະເງິນ</label>
-      <select id="paymentMethod">
-        <option value="cash">💵 ເງິນສົດ</option>
-        <option value="card">💳 ບັດ</option>
-        <option value="transfer">📱 ໂອນເງິນ</option>
-        <option value="other">ອື່ນໆ</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">ອັດຕາສ່ວນສະຫຼຸບ (%)</label>
-      <input type="number" class="form-input" id="discountPercent" placeholder="0" min="0" max="100" value="0" onchange="recalculateTotal()">
-    </div>
-    <div class="form-group">
-      <label class="form-label">ອັດຕາສ່ວນອາກອນ (%)</label>
-      <input type="number" class="form-input" id="taxPercent" placeholder="0" min="0" max="100" value="0" onchange="recalculateTotal()">
-    </div>
-    <div id="checkoutSummary" style="background:var(--surface2);border-radius:12px;padding:12px;margin:12px 0;font-size:13px;line-height:1.8"></div>
-    <div class="modal-buttons">
-      <button class="btn-modal btn-modal-cancel" onclick="beepClick();closeCheckout()">ຍົກເລີກ</button>
-      <button class="btn-modal btn-modal-save" onclick="beepOk();completeCheckout()">ຢືນຢັນ ➜</button>
+    <p id="deleteModalText" style="color:var(--text-mid);margin-bottom:20px"></p>
+    <div class="modal-actions">
+      <button class="btn-save" style="background:rgba(255,61,113,0.15);color:var(--accent2)" onclick="doDeleteProduct()">🗑️ ลบ</button>
+      <button class="btn-cancel" onclick="document.getElementById('deleteModal').classList.remove('open')">ยกเลิก</button>
     </div>
   </div>
 </div>
 
-<!-- Confirm Modals -->
-<div class="confirm-modal" id="confirmDeleteProduct">
-  <div class="confirm-box">
-    <h3>ລົບສິນຄ້າ?</h3>
-    <p id="deleteProductText"></p>
-    <div class="confirm-btns">
-      <button class="confirm-cancel" onclick="beepClick();this.closest('.confirm-modal').classList.remove('open')">ຍົກເລີກ</button>
-      <button class="confirm-delete" onclick="beepErr();doDeleteProduct()">ລົບ</button>
-    </div>
+<!-- ════ LOADING OVERLAY ════ -->
+<div id="loadingOverlay" class="hidden">
+  <div class="loading-content">
+    <div class="spinner"></div>
+    <div id="loadingMsg">กำลังโหลด…</div>
   </div>
 </div>
 
-<div class="confirm-modal" id="confirmLogoutModal">
-  <div class="confirm-box">
-    <h3>ອອກຈາກລະບົບ?</h3>
-    <p>ທ່ານຕ້ອງການອອກຈາກລະບົບບໍ?</p>
-    <div class="confirm-btns">
-      <button class="confirm-cancel" onclick="beepClick();this.closest('.confirm-modal').classList.remove('open')">ຍົກເລີກ</button>
-      <button class="confirm-delete" onclick="beepErr();doLogout()">ອອກ</button>
-    </div>
-  </div>
-</div>
+<!-- ════ TOAST ════ -->
+<div id="toast"></div>
 
 <script>
 // ════════════════════════════════════════════════════════════
-// SUPABASE CONFIG
+// ☁️ SUPABASE INIT
 // ════════════════════════════════════════════════════════════
-const SUPABASE_URL  = 'https://hobzzhzfzxmyomzbioqp.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvYnp6aHpmenhteW9temJvaXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjI5MjYsImV4cCI6MjA5MzAzODkyNn0.1IxTxc_j7_riwQBROAwQ-qnWW7sE9OgAkXe3G2gTD44';
-const SUPABASE_SECRET = 'sb_secret_3Csk4YuM0m1ksH2UNbY51g_t5WYoAr4';
-const STORAGE_BUCKET = 'product-images';
-const PIN_CODE = '884988';
-const MAX_PIN_ATTEMPTS = 5;
-const LOCKOUT_SECS = 30;
+const SUPA_URL = 'https://hobzzhzfzxmyomzboiqp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvYnp6aHpmenhteW9temJvaXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjI5MjYsImV4cCI6MjA5MzAzODkyNn0.1IxTxc_j7_riwQBROAwQ-qnWW7sE9OgAkXe3G2gTD44';
+const BUCKET  = 'product-images';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-// STATE
-let pinBuffer = '';
-let pinAttempts = parseInt(localStorage.getItem('pin_attempts') || '0');
-let lockoutUntil = parseInt(localStorage.getItem('pin_lockout') || '0');
+// ════════════════════════════════════════════════════════════
+// 📱 GLOBAL STATE
+// ════════════════════════════════════════════════════════════
 let isUnlocked = false;
-
-let products = JSON.parse(localStorage.getItem('ss_products') || '[]');
+let pinInput = '';
+let products = [];
 let cart = [];
-let history = JSON.parse(localStorage.getItem('ss_history') || '[]');
-let currentEditProductId = null;
-let currentProductPhoto = null;
-
-// AUDIO
-let audioCtx = null;
-function getAudio() {
-  if(!audioCtx) audioCtx = new(window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended') audioCtx.resume();
-  return audioCtx;
-}
-function beep(f=880,d=100,v=0.3) {
-  try{
-    const c=getAudio(),o=c.createOscillator(),g=c.createGain();
-    o.connect(g);g.connect(c.destination);o.frequency.value=f;
-    g.gain.setValueAtTime(v,c.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d/1000);
-    o.start();o.stop(c.currentTime+d/1000);
-  }catch(e){}
-}
-function beepClick(){beep(600,40,.15)}
-function beepOk(){beep(880,80,.4);setTimeout(()=>beep(1100,140,.4),100)}
-function beepErr(){beep(300,150,.3);setTimeout(()=>beep(200,180,.3),140)}
+let editingId = null;
+let currentPhoto = null;   // base64 preview (modal only)
+let currentPhotoFile = null; // actual File object to upload
+let deletePendingId = null;
+let scannerActive = false;
+let videoStream = null;
+let currentMode = 'auto';
 
 // ════════════════════════════════════════════════════════════
-// PIN & AUTH
+// 🔐 PIN LOCK
 // ════════════════════════════════════════════════════════════
-function pinTap(btn,digit){
-  if(checkLockout()) return;
-  if(pinBuffer.length>=6) return;
-  beepClick();
-  if(btn) btn.style.transform='scale(.9)'; setTimeout(()=>btn&&(btn.style.transform=''),100);
-  pinBuffer+=digit; updateDots();
-  if(pinBuffer.length===6) setTimeout(checkPin,150);
+const correctPin = '884988';
+let failedAttempts = 0;
+let lockoutTime = 0;
+
+function initPinPad(){
+  const pad = document.getElementById('pinPad');
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  keys.forEach(k => {
+    const btn = document.createElement('button');
+    btn.className = 'pin-key';
+    if(k === '') btn.style.visibility = 'hidden';
+    if(k === '⌫') btn.className += ' del';
+    btn.textContent = k;
+    btn.addEventListener('click', () => pinTap(btn, k));
+    pad.appendChild(btn);
+  });
+  
+  for(let i=0; i<6; i++){
+    const dot = document.createElement('div');
+    dot.className = 'pin-dot';
+    document.getElementById('pinDots').appendChild(dot);
+  }
 }
+
+function pinTap(btn, key){
+  if(lockoutTime > 0) return;
+  if(btn) {
+    const ripple = document.createElement('div');
+    ripple.className = 'pin-ripple';
+    ripple.style.left = (event.clientX - btn.getBoundingClientRect().left) + 'px';
+    ripple.style.top = (event.clientY - btn.getBoundingClientRect().top) + 'px';
+    btn.appendChild(ripple);
+  }
+  if(key === '⌫') pinDel();
+  else if(key !== '') {
+    if(pinInput.length < 6) pinInput += key;
+    updatePinDisplay();
+    if(pinInput.length === 6) checkPin();
+  }
+}
+
 function pinDel(){
-  if(!pinBuffer.length) return; beepClick();
-  pinBuffer=pinBuffer.slice(0,-1); updateDots();
+  pinInput = pinInput.slice(0, -1);
+  updatePinDisplay();
 }
-function updateDots(){
-  for(let i=0;i<6;i++){
-    const d=document.getElementById('d'+i);
-    d.classList.toggle('filled',i<pinBuffer.length);
-    d.classList.remove('error');
-  }
+
+function updatePinDisplay(){
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => {
+    if(i < pinInput.length) d.classList.add('filled');
+    else d.classList.remove('filled');
+  });
 }
+
 function checkPin(){
-  if(pinBuffer===PIN_CODE){
-    pinAttempts=0;localStorage.setItem('pin_attempts','0');
-    for(let i=0;i<6;i++) document.getElementById('d'+i).classList.add('filled');
-    beepOk();isUnlocked=true;
-    setTimeout(()=>{
-      goTo('home');pinBuffer='';updateDots();
-      loadFromCloud();
-    },350);
+  if(pinInput === correctPin){
+    isUnlocked = true;
+    showToast('✅ ปลดล็อกสำเร็จ');
+    setTimeout(() => goHome(), 400);
   } else {
-    beepErr();pinAttempts++;localStorage.setItem('pin_attempts',pinAttempts);
-    for(let i=0;i<6;i++) document.getElementById('d'+i).classList.add('error');
-    const left=MAX_PIN_ATTEMPTS-pinAttempts;
-    if(left<=0){
-      lockoutUntil=Date.now()+LOCKOUT_SECS*1000;
-      localStorage.setItem('pin_lockout',lockoutUntil);
-      document.getElementById('pinError').textContent='ບັນຊີຖືກລ໋ອກ';
-      startLockoutTimer();
-    } else {
-      document.getElementById('pinError').textContent=`ລະຫັດຜິດ ເຫຼືອ ${left} ຄັ້ງ`;
-    }
-    setTimeout(()=>{pinBuffer='';updateDots()},400);
+    failedAttempts++;
+    document.getElementById('pinError').textContent = '❌ PIN ไม่ถูกต้อง';
+    document.querySelectorAll('.pin-dot').forEach(d => d.classList.add('error'));
+    setTimeout(() => {
+      document.getElementById('pinError').textContent = '';
+      document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('error'));
+      pinInput = '';
+      updatePinDisplay();
+    }, 500);
+    document.getElementById('pinAttempt').textContent = `พยายาม ${failedAttempts}/5`;
+    
+    if(failedAttempts >= 5) startLockout();
   }
 }
+
+function startLockout(){
+  lockoutTime = 30;
+  document.getElementById('pinLockout').style.display = 'block';
+  const timer = setInterval(() => {
+    lockoutTime--;
+    document.getElementById('lockoutTimer').textContent = lockoutTime;
+    if(lockoutTime <= 0) {
+      clearInterval(timer);
+      lockoutTime = 0;
+      failedAttempts = 0;
+      document.getElementById('pinLockout').style.display = 'none';
+      document.getElementById('pinAttempt').textContent = '';
+    }
+  }, 1000);
+}
+
 function checkLockout(){
-  const now=Date.now();
-  if(lockoutUntil>now){startLockoutTimer();return true;}
+  const saved = localStorage.getItem('ss_lockout');
+  if(saved){
+    const remaining = parseInt(saved) - Date.now();
+    if(remaining > 0){
+      lockoutTime = Math.ceil(remaining / 1000);
+      document.getElementById('pinLockout').style.display = 'block';
+      const timer = setInterval(() => {
+        lockoutTime--;
+        document.getElementById('lockoutTimer').textContent = lockoutTime;
+        if(lockoutTime <= 0) {
+          clearInterval(timer);
+          localStorage.removeItem('ss_lockout');
+          document.getElementById('pinLockout').style.display = 'none';
+        }
+      }, 1000);
+      return true;
+    } else {
+      localStorage.removeItem('ss_lockout');
+    }
+  }
   return false;
 }
-function startLockoutTimer(){
-  const pad=document.getElementById('pinPad'),msg=document.getElementById('pinError');
-  pad.style.display='none';
-  const tick=()=>{
-    const rem=Math.ceil((lockoutUntil-Date.now())/1000);
-    if(rem<=0){pad.style.display='grid';msg.textContent='ລະຫັດຜິດ ລອງໃໝ່';}
-  };
-  let t=setInterval(()=>{tick();if(Date.now()>=lockoutUntil)clearInterval(t);},1000);
-  tick();
-}
-function confirmLogout(){document.getElementById('confirmLogoutModal').classList.add('open')}
-function doLogout(){
-  isUnlocked=false;pinBuffer='';updateDots();
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('pinLock').classList.add('active');
-}
 
 // ════════════════════════════════════════════════════════════
-// SUPABASE API
+// 🔄 PAGE NAVIGATION
 // ════════════════════════════════════════════════════════════
-const sb={
-  headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-  url(t,q=''){return `${SUPABASE_URL}/rest/v1/${t}${q}`},
-  async get(t,q=''){const r=await fetch(this.url(t,q),{headers:this.headers});if(!r.ok)throw new Error(await r.text());return r.json()},
-  async post(t,b){const r=await fetch(this.url(t),{method:'POST',headers:this.headers,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json()},
-  async patch(t,id,b){const r=await fetch(this.url(t,`?id=eq.${id}`),{method:'PATCH',headers:this.headers,body:JSON.stringify(b)});if(!r.ok)throw new Error(await r.text());return r.json()},
-  async delete(t,id){const r=await fetch(this.url(t,`?id=eq.${id}`),{method:'DELETE',headers:this.headers});if(!r.ok)throw new Error(await r.text())}
-};
+function showPage(pageId){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+}
 
-async function loadFromCloud(){
-  showLoading('ກຳລັງໂຫລດຂໍ້ມູນ…');
-  try{
-    const data=await sb.get('products','?order=created_at.desc');
-    if(data){
-      products=data;
-      localStorage.setItem('ss_products',JSON.stringify(products));
-      updateStatus(true,'ໂຫລດສຳເລັດ');
-      renderProducts();buildCategories();
-    }
-  }catch(e){
-    console.warn('Load failed:',e.message);
-    updateStatus(false,'ອອຟລາຍ');
+function goHome(){
+  stopScan();
+  showPage('home');
+}
+
+function goProfile(){
+  stopScan();
+  renderProfileStats();
+  renderProductsGrid();
+  showPage('profile');
+}
+
+function startScanner(){
+  showPage('scanner');
+  // ไม่เปิดกล้องอัตโนมัติ — รอให้ user กดปุ่ม "เริ่มสแกน"
+}
+
+function setMode(mode){
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  if(mode === 'auto'){
+    document.getElementById('autoScanner').style.display = 'flex';
+    document.getElementById('uploadMode').style.display = 'none';
+    // ไม่เปิดกล้องอัตโนมัติ — user ต้องกด "เริ่มสแกน"
+  } else {
+    document.getElementById('autoScanner').style.display = 'none';
+    document.getElementById('uploadMode').style.display = 'block';
+    stopScan();
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// 📷 CAMERA & AUTO SCAN
+// ════════════════════════════════════════════════════════════
+async function initCamera(){
+  try{
+    const video = document.getElementById('cameraFeed');
+    const placeholder = document.getElementById('camPlaceholder');
+    placeholder.innerHTML = '<span style="color:var(--accent);font-size:13px">กำลังขอสิทธิ์กล้อง...</span>';
+    placeholder.style.display = 'flex';
+
+    // ลองขอกล้องหลัง (environment) ก่อน ถ้าไม่ได้ใช้กล้องหน้า
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      });
+    } catch(e1) {
+      // ถ้ากล้องหลังไม่ได้ ลองกล้องหน้า
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+
+    videoStream = stream;
+    video.srcObject = stream;
+    video.setAttribute('playsinline', true);
+    video.setAttribute('muted', true);
+    await video.play();
+    video.style.display = 'block';
+    placeholder.style.display = 'none';
+  } catch(e){
+    const placeholder = document.getElementById('camPlaceholder');
+    let msg = '❌ ไม่สามารถเข้าถึงกล้องได้';
+    if(e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError'){
+      msg = '🔒 กรุณาอนุญาตการเข้าถึงกล้องในการตั้งค่าเบราว์เซอร์ แล้วโหลดหน้าใหม่';
+    } else if(e.name === 'NotFoundError'){
+      msg = '📷 ไม่พบกล้องในอุปกรณ์นี้';
+    } else if(e.name === 'NotSupportedError' || e.name === 'TypeError'){
+      msg = '⚠️ เบราว์เซอร์นี้ไม่รองรับการใช้กล้อง กรุณาใช้ Safari หรือ Chrome';
+    }
+    placeholder.innerHTML = `<span style="color:var(--accent2);font-size:13px;text-align:center;padding:12px">${msg}</span>`;
+    placeholder.style.display = 'flex';
+    showToast(msg.substring(0, 60));
+    console.error('Camera error:', e);
+  }
+}
+
+async function startScan(){
+  if(!videoStream){
+    await initCamera();
+    if(!videoStream) return; // ถ้ายังเปิดกล้องไม่ได้ หยุด
+  }
+  scannerActive = true;
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'block';
+  
+  let scanTime = 0;
+  const interval = setInterval(() => {
+    scanTime += 0.1;
+    document.getElementById('scanTimer').textContent = (1 - scanTime).toFixed(1) + 's';
+    
+    if(scanTime >= 1){
+      clearInterval(interval);
+      captureFrame();
+      stopScan();
+    }
+  }, 100);
+}
+
+function stopScan(){
+  scannerActive = false;
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('scanTimer').textContent = '';
+}
+
+async function captureFrame(){
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  
+  const imageData = canvas.toDataURL('image/jpeg', 0.8);
+  await processImage(imageData);
+}
+
+// ════════════════════════════════════════════════════════════
+// 🖼️ IMAGE PROCESSING & SIMILARITY CHECK (FIXED)
+// ════════════════════════════════════════════════════════════
+async function processImage(imageData){
+  showLoading('กำลังวิเคราะห์รูปภาพ...');
+
+  try{
+    // กรองเฉพาะสินค้าที่มีรูป
+    const withPhoto = products.filter(p => p.photo);
+    if(withPhoto.length === 0){
+      hideLoading();
+      showNoMatchResult();
+      showToast('⚠️ ยังไม่มีสินค้าที่มีรูปภาพ กรุณาเพิ่มสินค้าก่อน');
+      return;
+    }
+
+    // คำนวณ hash ของรูปที่สแกน
+    const scanHash = await getImageHash(imageData);
+
+    // เปรียบเทียบกับทุกสินค้า
+    const results = await Promise.all(withPhoto.map(async p => {
+      const prodHash = await getImageHash(p.photo);
+      return { product: p, similarity: hashSimilarity(scanHash, prodHash) };
+    }));
+
+    const best = results.reduce((a,b) => b.similarity > a.similarity ? b : a, results[0]);
+
+    if(best && best.similarity > 55){
+      showMatchResult(best, imageData);
+      addToCart(best.product);
+    } else {
+      showNoMatchResult();
+    }
+  } catch(e){
+    showToast('❌ เกิดข้อผิดพลาด: ' + e.message);
+    console.error('processImage error:', e);
+  }
+
   hideLoading();
 }
 
-async function syncCloud(){
-  showLoading('ກຳລັງຊິ້ງ…');
+// โหลดรูปเป็น Image object แบบ async ก่อนค่อย draw canvas
+function loadImageAsync(src){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('โหลดรูปไม่สำเร็จ'));
+    img.src = src;
+  });
+}
+
+async function getImageHash(src){
   try{
-    await loadFromCloud();
-    beepOk();
-    toast('☁️ ຊິ້ງສຳເລັດ!');
-  }catch(e){
-    beepErr();
-    toast('❌ ຊິ້ງລົ້ມ');
+    const img = await loadImageAsync(src);
+    const SIZE = 16;
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE; canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, SIZE, SIZE);
+    const px = ctx.getImageData(0, 0, SIZE, SIZE).data;
+
+    // คำนวณค่าเฉลี่ย
+    let total = 0, count = 0;
+    for(let i = 0; i < px.length; i += 4){
+      total += (px[i]*0.299 + px[i+1]*0.587 + px[i+2]*0.114);
+      count++;
+    }
+    const avg = total / count;
+
+    // สร้าง binary hash
+    let hash = '';
+    for(let i = 0; i < px.length; i += 4){
+      hash += (px[i]*0.299 + px[i+1]*0.587 + px[i+2]*0.114) >= avg ? '1' : '0';
+    }
+    return hash;
+  } catch(e){
+    return '0'.repeat(256);
   }
 }
 
-async function uploadProductImage(file){
-  const ext=file.name.split('.').pop()||'jpg';
-  const name=`prod_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-  const url=`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${name}`;
+function hashSimilarity(h1, h2){
+  if(!h1 || !h2 || h1.length !== h2.length) return 0;
+  let same = 0;
+  for(let i = 0; i < h1.length; i++) if(h1[i] === h2[i]) same++;
+  return (same / h1.length) * 100;
+}
+
+function hammingDistance(hash1, hash2){
+  let dist = 0;
+  for(let i=0; i<Math.min(hash1.length, hash2.length); i++){
+    if(hash1[i] !== hash2[i]) dist++;
+  }
+  return dist;
+}
+
+function showMatchResult(match, scannedImage){
+  const result = document.getElementById('matchResult');
+  result.classList.remove('error');
+  result.classList.add('success', 'show');
   
-  return new Promise((res,rej)=>{
-    const xhr=new XMLHttpRequest();
-    xhr.open('POST',url);
-    xhr.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr.onload=()=>{
-      if(xhr.status===200||xhr.status===201){
-        res(`${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${name}`);
-      }else{
-        rej(new Error('Upload failed'));
-      }
-    };
-    xhr.onerror=()=>rej(new Error('Network error'));
-    xhr.send(file);
-  });
-}
-
-// ════════════════════════════════════════════════════════════
-// PRODUCTS
-// ════════════════════════════════════════════════════════════
-function buildCategories(){
-  const cats=new Set(['ທັງໝົດ',...products.map(p=>p.category||'ອື່ນໆ')]);
-  const html=Array.from(cats).map(c=>`<button class="category-chip ${c==='ທັງໝົດ'?'active':''}" onclick="beepClick();filterByCategory('${c}')">${c}</button>`).join('');
-  document.getElementById('categoryScroll').innerHTML=html;
-}
-
-function filterByCategory(cat){
-  document.querySelectorAll('.category-chip').forEach(c=>c.classList.remove('active'));
-  event.target.classList.add('active');
-  filterProducts();
-}
-
-function filterProducts(){
-  const search=document.getElementById('searchInput').value.toLowerCase();
-  const cat=document.querySelector('.category-chip.active')?.textContent;
-  const filtered=products.filter(p=>{
-    const matchName=!search||p.name.toLowerCase().includes(search);
-    const matchCat=!cat||cat==='ທັງໝົດ'||p.category===cat;
-    return matchName&&matchCat;
-  });
-  renderProductGrid(filtered);
-}
-
-function renderProductGrid(list){
-  const html=list.map(p=>`
-    <div class="product-card" onclick="beepClick();addToCart('${p.id}')">
-      <img class="product-img" src="${p.photo||defImg()}" onerror="this.src='${defImg()}'">
-      <div class="product-actions">
-        <button class="product-btn edit" onclick="event.stopPropagation();beepClick();openEditProduct('${p.id}')" title="ແກ້ໄຂ">✎</button>
-        <button class="product-btn delete" onclick="event.stopPropagation();beepClick();confirmDeleteProduct('${p.id}')" title="ລົບ">✕</button>
-      </div>
-      <div class="product-info">
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">₭${fmt(p.price)}</div>
-        <div class="product-stock">ສຕັອກ: ${p.stock||0}</div>
-      </div>
+  const similarity = Math.round(match.similarity);
+  document.getElementById('matchIcon').textContent = '✓';
+  document.getElementById('matchTitle').textContent = match.product.name;
+  document.getElementById('matchDesc').textContent = `ความคล้ายคลึง ${similarity}%`;
+  
+  const details = document.getElementById('matchDetails');
+  details.innerHTML = `
+    <div class="match-item">
+      <div class="match-item-label">ราคา</div>
+      <div class="match-item-value">฿${fmt(match.product.price)}</div>
     </div>
-  `).join('');
-  document.getElementById('productsGrid').innerHTML=html||'<p style="grid-column:1/-1;text-align:center;color:var(--text-dim)">ບໍ່ພົບສິນຄ້າ</p>';
-}
-
-function renderProducts(){
-  const html=products.map(p=>`
-    <div class="product-row">
-      <img src="${p.photo||defImg()}" onerror="this.src='${defImg()}'">
-      <div class="product-row-info">
-        <div class="product-row-name">${p.name}</div>
-        <div class="product-row-meta">${p.category||'ອື່ນໆ'} | ສຕັອກ: ${p.stock||0}</div>
-        <div class="product-row-price">₭${fmt(p.price)}</div>
-      </div>
-      <div class="product-row-actions">
-        <button class="icon-btn" onclick="beepClick();openEditProduct('${p.id}')" title="ແກ້ໄຂ">✎</button>
-        <button class="icon-btn danger" onclick="beepClick();confirmDeleteProduct('${p.id}')" title="ລົບ">✕</button>
-      </div>
+    <div class="match-item">
+      <div class="match-item-label">ความเหมือน</div>
+      <div class="match-item-value">${similarity}%</div>
     </div>
-  `).join('');
-  document.getElementById('productsList').innerHTML=html||'<p style="text-align:center;color:var(--text-dim);padding:20px">ບໍ່ມີສິນຄ້າ ກົດ ➕ ເພື່ອເພີ່ມ</p>';
+  `;
+  
+  document.getElementById('matchImg').src = match.product.photo || defImg();
+  
+  setTimeout(() => result.classList.remove('show'), 3000);
 }
 
-function openAddProduct(){
-  currentEditProductId=null;
-  currentProductPhoto=null;
-  document.getElementById('productModalTitle').textContent='ເພີ່ມສິນຄ້າ';
-  document.getElementById('productName').value='';
-  document.getElementById('productPrice').value='';
-  document.getElementById('productStock').value='';
-  document.getElementById('productCategory').value='ອື່ນໆ';
-  document.getElementById('productDetail').value='';
-  document.getElementById('photoPreview').style.display='none';
-  document.getElementById('productModal').classList.add('open');
+function showNoMatchResult(){
+  const result = document.getElementById('matchResult');
+  result.classList.remove('success');
+  result.classList.add('error', 'show');
+  
+  document.getElementById('matchIcon').textContent = '✗';
+  document.getElementById('matchTitle').textContent = 'ไม่พบสินค้า';
+  document.getElementById('matchDesc').textContent = 'ไม่พบรูปภาพที่คล้ายกัน';
+  document.getElementById('matchDetails').innerHTML = '';
+  document.getElementById('matchImg').src = '';
+  
+  showToast('⚠️ ไม่พบสินค้าที่คล้ายกัน');
+  setTimeout(() => result.classList.remove('show'), 3000);
 }
 
-function openEditProduct(id){
-  const p=products.find(x=>x.id===id);
-  if(!p) return;
-  currentEditProductId=id;
-  currentProductPhoto=p.photo||null;
-  document.getElementById('productModalTitle').textContent='ແກ້ໄຂສິນຄ້າ';
-  document.getElementById('productName').value=p.name;
-  document.getElementById('productPrice').value=p.price;
-  document.getElementById('productStock').value=p.stock||0;
-  document.getElementById('productCategory').value=p.category||'ອື່ນໆ';
-  document.getElementById('productDetail').value=p.detail||'';
-  if(p.photo){
-    document.getElementById('photoPreview').src=p.photo;
-    document.getElementById('photoPreview').style.display='block';
-  }else{
-    document.getElementById('photoPreview').style.display='none';
+async function handleImageUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  e.target.value = ''; // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้
+
+  // ตรวจขนาดไฟล์ (สูงสุด 10MB)
+  if(file.size > 10 * 1024 * 1024){
+    showToast('⚠️ ไฟล์ใหญ่เกินไป (สูงสุด 10MB)');
+    return;
   }
-  document.getElementById('productModal').classList.add('open');
+
+  showLoading('กำลังโหลดรูปภาพ...');
+
+  try{
+    const reader = new FileReader();
+    const imageData = await new Promise((resolve, reject) => {
+      reader.onload = ev => resolve(ev.target.result);
+      reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+      reader.readAsDataURL(file);
+    });
+    hideLoading();
+    await processImage(imageData);
+  } catch(err){
+    hideLoading();
+    showToast('❌ ' + err.message);
+  }
 }
 
-function closeProductModal(){document.getElementById('productModal').classList.remove('open')}
+// ════════════════════════════════════════════════════════════
+// 🛒 CART & SCANNED LIST
+// ════════════════════════════════════════════════════════════
+function addToCart(product){
+  const existing = cart.find(i => i.product.id === product.id);
+  if(existing){
+    existing.qty++;
+  } else {
+    cart.push({product, qty: 1});
+  }
+  saveCart();
+  renderScannedList();
+  updateStats();
+}
 
-function handleProductPhoto(e){
-  const f=e.target.files[0];
+function removeFromCart(id){
+  cart = cart.filter(i => i.product.id !== id);
+  saveCart();
+  renderScannedList();
+  updateStats();
+}
+
+function renderScannedList(){
+  const list = document.getElementById('scannedList');
+  const section = document.getElementById('scanListSection');
+  
+  if(cart.length === 0){
+    section.style.display = 'none';
+    return;
+  }
+  
+  section.style.display = 'block';
+  list.innerHTML = cart.map(item => `
+    <div class="scanned-item">
+      <img class="scanned-img" src="${item.product.photo || defImg()}" alt="">
+      <div class="scanned-info">
+        <div class="scanned-name">${item.product.name}</div>
+        <div class="scanned-price">฿${fmt(item.product.price)}</div>
+        <div class="scanned-qty">จำนวน: ${item.qty}</div>
+      </div>
+      <button class="scanned-remove" onclick="removeFromCart('${item.product.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function updateStats(){
+  document.getElementById('totalScans').textContent = cart.reduce((s, i) => s + i.qty, 0);
+}
+
+// ════════════════════════════════════════════════════════════
+// 👤 PROFILE
+// ════════════════════════════════════════════════════════════
+function renderProfileStats(){
+  document.getElementById('totalProducts').textContent = products.length;
+  document.getElementById('totalScans').textContent = cart.reduce((s, i) => s + i.qty, 0);
+  const total = products.reduce((s, p) => s + (p.price * (cart.find(c => c.product.id === p.id)?.qty || 0)), 0);
+  document.getElementById('totalValue').textContent = '฿' + fmt(total);
+}
+
+function renderProductsGrid(){
+  const grid = document.getElementById('scansGrid');
+  if(products.length === 0){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:var(--text-dim)">ยังไม่มีสินค้า</div>';
+    return;
+  }
+  
+  grid.innerHTML = products.map(p => `
+    <div class="scan-card" onclick="openEditModal(products.find(x=>x.id==='${p.id}'))">
+      <img class="scan-card-img" src="${p.photo || defImg()}" alt="">
+      <div class="scan-card-info">
+        <div class="scan-card-name">${p.name}</div>
+        <div class="scan-card-price">฿${fmt(p.price)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// 📝 PRODUCT MANAGEMENT (EXISTING)
+// ════════════════════════════════════════════════════════════
+function renderProducts(){
+  loadProds();
+  renderProductsGrid();
+  renderScannedList();
+}
+
+function loadProds(){
+  const saved = localStorage.getItem('ss_products');
+  products = saved ? JSON.parse(saved) : [];
+}
+
+function openAddModal(){
+  editingId = null;
+  currentPhoto = null;
+  currentPhotoFile = null;
+  document.getElementById('modalTitle').textContent = 'เพิ่มสินค้าใหม่';
+  document.getElementById('inputName').value = '';
+  document.getElementById('inputPrice').value = '';
+  document.getElementById('inputDetail').value = '';
+  resetPhotoUI();
+  document.getElementById('addModal').classList.add('open');
+}
+
+function openEditModal(p){
+  editingId = p.id;
+  currentPhoto = p.photo || null;
+  currentPhotoFile = null;
+  document.getElementById('modalTitle').textContent = 'แก้ไขสินค้า';
+  document.getElementById('inputName').value = p.name;
+  document.getElementById('inputPrice').value = p.price;
+  document.getElementById('inputDetail').value = p.detail || '';
+  if(p.photo){
+    document.getElementById('photoPreview').src = p.photo;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoLabel').style.display = 'none';
+  } else resetPhotoUI();
+  document.getElementById('addModal').classList.add('open');
+}
+
+function closeAddModal(){
+  document.getElementById('addModal').classList.remove('open');
+}
+
+function resetPhotoUI(){
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoPreview').src = '';
+  document.getElementById('photoLabel').style.display = 'block';
+}
+
+function handlePhoto(e){
+  const f = e.target.files[0];
   if(!f) return;
-  currentProductPhoto=f;
-  const r=new FileReader();
-  r.onload=ev=>{
-    document.getElementById('photoPreview').src=ev.target.result;
-    document.getElementById('photoPreview').style.display='block';
+  currentPhotoFile = f; // เก็บ File ไว้อัพโหลด Supabase
+  const r = new FileReader();
+  r.onload = ev => {
+    currentPhoto = ev.target.result; // base64 preview
+    document.getElementById('photoPreview').src = currentPhoto;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoLabel').style.display = 'none';
   };
   r.readAsDataURL(f);
 }
 
-async function saveProduct(){
-  const name=document.getElementById('productName').value.trim();
-  const price=parseFloat(document.getElementById('productPrice').value);
-  const stock=parseInt(document.getElementById('productStock').value)||0;
-  const cat=document.getElementById('productCategory').value;
-  const detail=document.getElementById('productDetail').value.trim();
+// ════════════════════════════════════════════════════════════
+// ☁️ SUPABASE STORAGE UPLOAD
+// ════════════════════════════════════════════════════════════
+async function uploadImageToSupabase(file, productId){
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `products/${productId}_${Date.now()}.${ext}`;
 
-  if(!name||isNaN(price)||price<0){beepErr();toast('⚠️ ກະລຸນາກໍ່ຕັ້ງຊື່ ແລະ ລາຄາ');return;}
+  const { error } = await sb.storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type });
 
-  closeProductModal();
-  showLoading('ກຳລັງບັນທຶກ…');
-
-  try{
-    let photoUrl=currentProductPhoto;
-    if(currentProductPhoto instanceof File){
-      photoUrl=await uploadProductImage(currentProductPhoto);
+  if(error){
+    // ถ้า bucket ยังไม่มี ลองสร้างอัตโนมัติ
+    if(error.message && error.message.includes('Bucket not found')){
+      throw new Error('ไม่พบ bucket "' + BUCKET + '" กรุณาสร้าง bucket ใน Supabase Storage ก่อนครับ');
     }
+    throw new Error(error.message);
+  }
 
-    const body={name,price,stock,category:cat,detail,photo:photoUrl||''};
-
-    if(currentEditProductId){
-      await sb.patch('products',currentEditProductId,body);
-      const idx=products.findIndex(p=>p.id===currentEditProductId);
-      if(idx>=0) products[idx]={...products[idx],...body};
-      toast('✏️ ແກ້ໄຂສຳເລັດ');
-    } else {
-      const [row]=await sb.post('products',body);
-      products.unshift({id:row.id,...body});
-      toast('✅ ເພີ່ມສຳເລັດ');
-    }
-    localStorage.setItem('ss_products',JSON.stringify(products));
-    renderProducts();buildCategories();renderProductGrid(products);
-    beepOk();
-  }catch(e){
-    beepErr();
-    toast('❌ ບັນທຶກລົ້ມ:'+e.message);
-  }finally{hideLoading();}
+  const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
 }
 
-function confirmDeleteProduct(id){
-  const p=products.find(x=>x.id===id);
-  if(!p) return;
-  document.getElementById('deleteProductText').textContent=`ລົບ "${p.name}"?`;
-  window.deleteProductId=id;
-  document.getElementById('confirmDeleteProduct').classList.add('open');
+async function saveProduct(){
+  const name = document.getElementById('inputName').value.trim();
+  const price = parseFloat(document.getElementById('inputPrice').value);
+  const detail = document.getElementById('inputDetail').value.trim();
+
+  if(!name){ showToast('⚠️ กรุณากรอกชื่อสินค้า'); return; }
+  if(isNaN(price) || price < 0){ showToast('⚠️ กรุณากรอกราคาที่ถูกต้อง'); return; }
+
+  closeAddModal();
+  showLoading('กำลังบันทึก…');
+
+  try{
+    let photoUrl = currentPhoto; // ใช้ URL เดิม (กรณีแก้ไขและไม่ได้เปลี่ยนรูป)
+
+    // ถ้ามีไฟล์รูปใหม่ → อัพโหลดไป Supabase Storage
+    if(currentPhotoFile){
+      showLoading('กำลังอัพโหลดรูปภาพ…');
+      const tempId = editingId || ('new_' + Date.now());
+      photoUrl = await uploadImageToSupabase(currentPhotoFile, tempId);
+    }
+
+    if(editingId){
+      const p = products.find(x => x.id === editingId);
+      if(p){
+        p.name = name;
+        p.price = price;
+        p.detail = detail;
+        if(photoUrl) p.photo = photoUrl;
+      }
+      showToast('✏️ แก้ไขสินค้าเรียบร้อย');
+    } else {
+      const newId = Date.now().toString();
+      // ถ้าอัพโหลดใหม่ด้วย tempId ให้ rename path (skip — URL ใช้ได้แล้ว)
+      products.push({ id: newId, name, price, detail, photo: photoUrl || '' });
+      showToast('✅ เพิ่มสินค้าเรียบร้อย');
+    }
+  } catch(e){
+    showToast('❌ ' + (e.message || 'บันทึกไม่สำเร็จ'));
+    console.error('saveProduct error:', e);
+  }
+
+  hideLoading();
+  saveProds();
+  renderProducts();
+  currentPhotoFile = null;
+}
+
+function openDeleteModal(id){
+  deletePendingId = id;
+  const p = products.find(x => x.id === id);
+  document.getElementById('deleteModalText').textContent = `ต้องการลบ "${p ? p.name : 'สินค้า'}" ออกจากระบบ? ไม่สามารถกู้คืนได้`;
+  document.getElementById('deleteModal').classList.add('open');
 }
 
 async function doDeleteProduct(){
-  const id=window.deleteProductId;
-  document.getElementById('confirmDeleteProduct').classList.remove('open');
-  showLoading('ກຳລັງລົບ…');
+  if(!deletePendingId) return;
+  document.getElementById('deleteModal').classList.remove('open');
+  showLoading('กำลังลบ…');
+  
+  products = products.filter(p => p.id !== deletePendingId);
+  cart = cart.filter(i => i.product.id !== deletePendingId);
+  
+  saveProds();
+  renderProducts();
+  hideLoading();
+  showToast('🗑️ ลบสินค้าเรียบร้อย');
+  deletePendingId = null;
+}
+
+function saveProds(){
+  localStorage.setItem('ss_products', JSON.stringify(products));
+}
+
+function saveCart(){
+  localStorage.setItem('ss_cart', JSON.stringify(cart));
+}
+
+// ════════════════════════════════════════════════════════════
+// 🛠️ HELPERS
+// ════════════════════════════════════════════════════════════
+function fmt(n){
+  return Number(n).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function defImg(){
+  return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%231c1c28'/%3E%3Ctext x='40' y='48' text-anchor='middle' font-size='32'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E";
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function showLoading(msg = 'กำลังโหลด…'){
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('loadingMsg').textContent = msg;
+}
+
+function hideLoading(){
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════════
+// 🚀 INIT
+// ════════════════════════════════════════════════════════════
+async function checkSupabaseStorage(){
   try{
-    await sb.delete('products',id);
-    products=products.filter(p=>p.id!==id);
-    cart=cart.filter(i=>i.productId!==id);
-    localStorage.setItem('ss_products',JSON.stringify(products));
-    renderProducts();buildCategories();renderProductGrid(products);renderCart();
-    toast('🗑️ ລົບສຳເລັດ');
-    beepOk();
-  }catch(e){
-    beepErr();
-    toast('❌ ລົບລົ້ມ');
-  }finally{hideLoading();}
-}
-
-// ════════════════════════════════════════════════════════════
-// CART & POS
-// ════════════════════════════════════════════════════════════
-function addToCart(productId){
-  const p=products.find(x=>x.id===productId);
-  if(!p) return;
-  const existing=cart.find(i=>i.productId===productId);
-  if(existing) existing.qty++;
-  else cart.push({productId,name:p.name,price:p.price,qty:1,photo:p.photo});
-  renderCart();
-  beepOk();
-  toast(`➕ ${p.name}`);
-}
-
-function changeQty(productId,delta){
-  const item=cart.find(i=>i.productId===productId);
-  if(!item) return;
-  item.qty+=delta;
-  if(item.qty<=0) cart=cart.filter(i=>i.productId!==productId);
-  renderCart();
-}
-
-function renderCart(){
-  const count=cart.reduce((s,i)=>s+i.qty,0);
-  document.getElementById('cartCount').textContent=`${count} ລາຍການ`;
-  document.getElementById('cartItemCount').textContent=count;
-
-  if(cart.length===0){
-    document.getElementById('cartContainer').classList.add('hidden');
-  }else{
-    document.getElementById('cartContainer').classList.remove('hidden');
-    document.getElementById('cartTotal').textContent='₭'+fmt(calcTotal());
-    const html=cart.map(i=>`
-      <div class="cart-item">
-        <div class="cart-item-name">${i.name}</div>
-        <div class="qty-control">
-          <button class="qty-btn-sm" onclick="beepClick();changeQty('${i.productId}',-1)">−</button>
-          <span class="qty-num-sm">${i.qty}</span>
-          <button class="qty-btn-sm" onclick="beepClick();changeQty('${i.productId}',1)">+</button>
-        </div>
-        <div class="cart-item-price">₭${fmt(i.price*i.qty)}</div>
-        <button class="cart-remove" onclick="beepErr();cart=cart.filter(x=>x.productId!=='${i.productId}');renderCart()">✕</button>
-      </div>
-    `).join('');
-    document.getElementById('cartList').innerHTML=html;
+    // ทดสอบว่า bucket มีอยู่
+    const { error } = await sb.storage.from(BUCKET).list('products', { limit: 1 });
+    if(error){
+      if(error.message && error.message.includes('not found')){
+        // bucket ไม่มี → แจ้ง user
+        const dot = document.querySelector('.sync-dot');
+        if(dot){ dot.className = 'sync-dot error'; }
+        const statusEl = document.querySelector('.sync-status');
+        if(statusEl) statusEl.innerHTML = '<span class="sync-dot error"></span> Bucket "product-images" ไม่พบ — กรุณาสร้างใน Supabase Storage';
+        console.warn('Supabase bucket not found:', error.message);
+        return false;
+      }
+    }
+    const dot = document.querySelector('.sync-dot');
+    if(dot){ dot.className = 'sync-dot'; }
+    const statusEl = document.querySelector('.sync-status');
+    if(statusEl) statusEl.innerHTML = '<span class="sync-dot"></span> Supabase เชื่อมต่อแล้ว';
+    return true;
+  } catch(e){
+    console.warn('Supabase check failed:', e);
+    return false;
   }
 }
 
-function clearCart(){cart=[];renderCart();toast('🗑️ ລ້າງລາຍການ');}
-
-function calcTotal(){
-  return cart.reduce((s,i)=>s+i.price*i.qty,0);
-}
-
-function openCheckout(){
-  if(cart.length===0){toast('⚠️ ຕະກ່ອບຫວ່າງ');return;}
-  document.getElementById('customerName').value='';
-  document.getElementById('paymentMethod').value='cash';
-  document.getElementById('discountPercent').value='0';
-  document.getElementById('taxPercent').value='0';
-  recalculateTotal();
-  document.getElementById('checkoutModal').classList.add('open');
-}
-
-function closeCheckout(){document.getElementById('checkoutModal').classList.remove('open')}
-
-function recalculateTotal(){
-  const subtotal=calcTotal();
-  const discount=parseFloat(document.getElementById('discountPercent').value)||0;
-  const tax=parseFloat(document.getElementById('taxPercent').value)||0;
-  const discountAmt=subtotal*(discount/100);
-  const afterDiscount=subtotal-discountAmt;
-  const taxAmt=afterDiscount*(tax/100);
-  const total=afterDiscount+taxAmt;
-
-  document.getElementById('checkoutSummary').innerHTML=`
-    <div style="display:flex;justify-content:space-between">
-      <span>ລາຄາຮວມ:</span>
-      <span>₭${fmt(subtotal)}</span>
-    </div>
-    ${discount>0?`<div style="display:flex;justify-content:space-between;color:var(--accent3)">
-      <span>ສະຫຼຸບ (${discount}%):</span>
-      <span>-₭${fmt(discountAmt)}</span>
-    </div>`:''}
-    ${tax>0?`<div style="display:flex;justify-content:space-between;color:var(--accent4)">
-      <span>ອາກອນ (${tax}%):</span>
-      <span>+₭${fmt(taxAmt)}</span>
-    </div>`:''}
-    <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:8px;font-weight:700;font-size:16px;color:var(--accent3)">
-      <span>ທັງໝົດ:</span>
-      <span>₭${fmt(total)}</span>
-    </div>
-  `;
-}
-
-async function completeCheckout(){
-  const discount=parseFloat(document.getElementById('discountPercent').value)||0;
-  const tax=parseFloat(document.getElementById('taxPercent').value)||0;
-  const subtotal=calcTotal();
-  const discountAmt=subtotal*(discount/100);
-  const afterDiscount=subtotal-discountAmt;
-  const taxAmt=afterDiscount*(tax/100);
-  const total=afterDiscount+taxAmt;
-
-  const receipt={
-    id:'RCP_'+Date.now(),
-    date:new Date().toISOString(),
-    customer:document.getElementById('customerName').value||'ບໍ່ມີຊື່',
-    payment:document.getElementById('paymentMethod').value,
-    items:cart.map(i=>({name:i.name,qty:i.qty,price:i.price,subtotal:i.price*i.qty})),
-    subtotal,discount,discountAmt,tax,taxAmt,total
-  };
-
-  closeCheckout();
-  showLoading('ກຳລັງບັນທຶກ…');
-
-  try{
-    await sb.post('orders',{
-      receipt_number:receipt.id,
-      customer_name:receipt.customer,
-      payment_method:receipt.payment,
-      subtotal:receipt.subtotal,
-      discount_percent:discount,
-      tax_percent:tax,
-      total:receipt.total,
-      items_count:cart.reduce((s,i)=>s+i.qty,0)
-    });
-    history.unshift(receipt);
-    localStorage.setItem('ss_history',JSON.stringify(history));
-    cart=[];
-    renderCart();
-    showReceipt(receipt);
-    toast('✅ ຊຳລະສຳເລັດ!');
-    beepOk();
-  }catch(e){
-    beepErr();
-    toast('⚠️ ບັນທຶກ Cloud ລົ້ມ ແຕ່ບັນທຶກໂລກັล');
-    history.unshift(receipt);
-    localStorage.setItem('ss_history',JSON.stringify(history));
-    cart=[];
-    renderCart();
-    showReceipt(receipt);
-  }finally{hideLoading();}
-}
-
-function showReceipt(receipt){
-  const html=`
-    <div style="position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s ease">
-      <div style="background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:380px;max-height:80dvh;overflow-y:auto">
-        <div style="text-align:center;margin-bottom:20px">
-          <div style="font-size:40px;margin-bottom:8px">✅</div>
-          <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">ຊຳລະສຳເລັດ!</h2>
-          <p style="color:var(--text-dim);font-size:13px">${new Date(receipt.date).toLocaleString('lo-LA')}</p>
-        </div>
-        <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;border:1px solid var(--border)">
-          <div style="font-weight:700;margin-bottom:8px">ເລກທີ່ໃບເສີ້ຼຍ: <span style="color:var(--accent)">${receipt.id}</span></div>
-          <div style="color:var(--text-dim)">ລູກຄ້າ: ${receipt.customer}</div>
-          <div style="color:var(--text-dim)">ວິທີຊຳລະ: ${receipt.payment}</div>
-          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;color:var(--text-dim)">
-            ${receipt.items.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px">
-              <span>${i.name} ×${i.qty}</span>
-              <span style="color:var(--accent3)">₭${fmt(i.subtotal)}</span>
-            </div>`).join('')}
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--accent3);font-size:16px">
-            <span>ທັງໝົດ:</span>
-            <span>₭${fmt(receipt.total)}</span>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn-modal btn-modal-save" onclick="this.closest('div[style*=fixed]').remove();goTo('scanner')" style="flex:1">➜ ສະແກນຕໍ່</button>
-          <button class="btn-modal btn-modal-cancel" onclick="this.closest('div[style*=fixed]').remove();printReceipt('${JSON.stringify(receipt).replace(/'/g,'&quot;')}')">🖨️ ພິມ</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend',html);
-}
-
-function printReceipt(receiptJson){
-  const receipt=JSON.parse(receiptJson);
-  const w=window.open();
-  w.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>ໃບເສີ້ຼຍ ${receipt.id}</title>
-      <style>
-        body{font-family:monospace;max-width:300px;margin:0;padding:20px}
-        .header{text-align:center;margin-bottom:20px;font-weight:bold;font-size:16px}
-        .line{display:flex;justify-content:space-between;margin:5px 0;font-size:13px}
-        .total-line{border-top:1px solid #000;padding-top:10px;margin-top:10px;font-weight:bold;font-size:14px}
-        @media print{body{margin:0;padding:10px}}
-      </style>
-    </head>
-    <body>
-      <div class="header">✓ ຊຳລະສຳເລັດ</div>
-      <div class="line"><span>ເລກທີ່:</span><span>${receipt.id}</span></div>
-      <div class="line"><span>ວັນທີ:</span><span>${new Date(receipt.date).toLocaleString('lo-LA')}</span></div>
-      <div class="line"><span>ລູກຄ້າ:</span><span>${receipt.customer}</span></div>
-      <div class="line"><span>ວິທີຊຳລະ:</span><span>${receipt.payment}</span></div>
-      <hr>
-      ${receipt.items.map(i=>`<div class="line"><span>${i.name} ×${i.qty}</span><span>₭${fmt(i.subtotal)}</span></div>`).join('')}
-      <hr>
-      <div class="line"><span>ລາຄາຮວມ:</span><span>₭${fmt(receipt.subtotal)}</span></div>
-      ${receipt.discount>0?`<div class="line"><span>ສະຫຼຸບ (${receipt.discount}%):</span><span>-₭${fmt(receipt.discountAmt)}</span></div>`:''}
-      ${receipt.tax>0?`<div class="line"><span>ອາກອນ (${receipt.tax}%):</span><span>+₭${fmt(receipt.taxAmt)}</span></div>`:''}
-      <div class="line total-line"><span>ທັງໝົດ:</span><span>₭${fmt(receipt.total)}</span></div>
-      <hr>
-      <p style="text-align:center;color:#666;font-size:11px">ຂອບໃຈທີ່ໃຊ້ບໍລິການ!</p>
-      <script>window.print();window.close();</script>
-    </body>
-    </html>
-  `);
-}
-
-// ════════════════════════════════════════════════════════════
-// HISTORY
-// ════════════════════════════════════════════════════════════
-function filterHistory(filter){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-
-  const now=new Date();
-  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  const weekAgo=new Date(today.getTime()-7*24*60*60*1000);
-  const monthAgo=new Date(now.getFullYear(),now.getMonth(),1);
-
-  const filtered=history.filter(r=>{
-    const rDate=new Date(r.date);
-    if(filter==='today') return rDate>=today;
-    if(filter==='week') return rDate>=weekAgo;
-    if(filter==='month') return rDate>=monthAgo;
-    return true;
-  });
-
-  renderHistory(filtered);
-}
-
-function renderHistory(list){
-  const html=list.map(r=>`
-    <div class="receipt-card" onclick="showHistoryDetail('${JSON.stringify(r).replace(/'/g,'&quot;')}')">
-      <div class="receipt-header">
-        <div class="receipt-no">${r.id}</div>
-        <div class="receipt-date">${new Date(r.date).toLocaleString('lo-LA')}</div>
-      </div>
-      <div class="receipt-count">${r.items.length} ລາຍການ | ${r.customer}</div>
-      <div class="receipt-total">₭${fmt(r.total)}</div>
-    </div>
-  `).join('');
-  document.getElementById('historyList').innerHTML=html||'<p style="text-align:center;color:var(--text-dim);padding:20px">ບໍ່ມີປະຫວັດ</p>';
-}
-
-function showHistoryDetail(receiptJson){
-  const receipt=JSON.parse(receiptJson);
-  const html=`
-    <div style="position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;animation:fadeIn .3s ease">
-      <div style="background:var(--surface);border-radius:16px;padding:24px;width:100%;max-width:380px;max-height:80dvh;overflow-y:auto">
-        <div style="text-align:center;margin-bottom:20px">
-          <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">${receipt.id}</h2>
-          <p style="color:var(--text-dim);font-size:12px">${new Date(receipt.date).toLocaleString('lo-LA')}</p>
-        </div>
-        <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px;border:1px solid var(--border)">
-          <div style="margin-bottom:8px"><span style="color:var(--text-dim)">ລູກຄ້າ:</span> ${receipt.customer}</div>
-          <div style="margin-bottom:8px"><span style="color:var(--text-dim)">ວິທີຊຳລະ:</span> ${receipt.payment}</div>
-          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px">
-            ${receipt.items.map(i=>`<div style="display:flex;justify-content:space-between;margin:4px 0">
-              <span>${i.name} ×${i.qty}</span>
-              <span style="color:var(--accent3)">₭${fmt(i.subtotal)}</span>
-            </div>`).join('')}
-          </div>
-          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;display:flex;justify-content:space-between;font-weight:700;color:var(--accent3)">
-            <span>ທັງໝົດ:</span>
-            <span>₭${fmt(receipt.total)}</span>
-          </div>
-        </div>
-        <button class="btn-modal btn-modal-save" onclick="this.closest('div[style*=fixed]').remove()" style="width:100%">ກັບ</button>
-      </div>
-    </div>
-  `;
-  document.body.insertAdjacentHTML('beforeend',html);
-}
-
-// ════════════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════════════
-function goTo(page){
-  if(!isUnlocked&&page!=='pinLock') return;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(page).classList.add('active');
-  if(page==='scanner') {filterProducts();buildCategories();}
-  if(page==='products') renderProducts();
-  if(page==='history') filterHistory('all');
-}
-
-function updateStatus(ok,text){
-  const dot=document.getElementById('statusDot');
-  const span=document.getElementById('statusText');
-  dot.className='status-dot'+(ok===true?'':ok===false?' error':' offline');
-  span.textContent=text;
-}
-
-function fmt(n){return Number(n).toLocaleString('lo-LA',{minimumFractionDigits:0,maximumFractionDigits:0})}
-function defImg(){return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Crect width='60' height='60' fill='%231c1c28'/%3E%3Ctext x='30' y='35' text-anchor='middle' font-size='24'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E"}
-function showLoading(msg){document.getElementById('loadingText').textContent=msg;document.getElementById('loading').classList.add('show')}
-function hideLoading(){document.getElementById('loading').classList.remove('show')}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
-
-// INIT
-document.addEventListener('touchstart',()=>getAudio(),{once:true});
-document.addEventListener('click',()=>getAudio(),{once:true});
+initPinPad();
 hideLoading();
-if(checkLockout()){}
+if(checkLockout()){ /* show lockout */ }
 renderProducts();
+// ตรวจ Supabase หลัง init
+checkSupabaseStorage();
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if(e.target === document.getElementById('addModal')) closeAddModal();
+});
+
+document.addEventListener('keydown', e => {
+  if(!isUnlocked){
+    if(e.key >= '0' && e.key <= '9') pinTap(null, e.key);
+    if(e.key === 'Backspace') pinDel();
+  }
+});
 </script>
 </body>
 </html>
