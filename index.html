@@ -6,6 +6,7 @@
 <title>ระบบ POS ร้านค้าอัตโนมัติ</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 
@@ -234,24 +235,20 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="scanner-header">
     <button class="back-btn" onclick="beepClick();stopScanning();goTo('home')">←</button>
     <h2>สแกนสินค้า</h2>
-    <span style="font-size:11px;color:var(--accent);font-weight:700" id="scanModeLabel">🔄 อัตโนมัติ</span>
+    <span style="font-size:11px;color:var(--accent);font-weight:700" id="scanModeLabel">📊 Barcode</span>
   </div>
 
   <div class="camera-area" id="cameraArea">
     <video id="video" autoplay playsinline muted style="display:none"></video>
-    <div class="scan-frame" id="scanFrame"></div>
-    <div class="scan-status" id="scanStatus">📷 กำลังสแกน…</div>
-    <!-- TAP TO SCAN BUTTON overlay on camera -->
-    <button id="tapScanBtn" onclick="tapToScan()" style="
-      position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
-      background:linear-gradient(135deg,var(--accent),#007acc);
-      color:#000;border:none;border-radius:50px;
-      padding:12px 28px;font-family:'Kanit',sans-serif;font-size:14px;font-weight:800;
-      cursor:pointer;box-shadow:0 0 20px rgba(0,229,255,0.6);
-      display:flex;align-items:center;gap:8px;white-space:nowrap;z-index:10;
-      transition:transform .1s,box-shadow .1s">
-      <span style="font-size:20px">📷</span> แตะเพื่อสแกน
-    </button>
+    <!-- Barcode scan frame guide -->
+    <div id="barcodeFrame" style="position:absolute;width:70%;height:120px;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center">
+      <div style="position:absolute;top:0;left:0;width:24px;height:24px;border-top:3px solid var(--accent);border-left:3px solid var(--accent);border-radius:2px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:24px;height:24px;border-top:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:0 2px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:24px;height:24px;border-bottom:3px solid var(--accent);border-left:3px solid var(--accent);border-radius:0 0 0 2px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:0 0 2px 0"></div>
+      <div class="scan-line"></div>
+    </div>
+    <div class="scan-status" id="scanStatus">📷 กำลังเปิดกล้อง…</div>
   </div>
 
   <!-- Scan result flash -->
@@ -455,6 +452,23 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
+<!-- NOT FOUND MODAL -->
+<div class="modal-bg" id="notFoundModal" style="align-items:center;justify-content:center">
+  <div class="modal" style="border-radius:18px;max-width:320px;margin:auto;text-align:center;padding:28px 20px">
+    <div style="font-size:64px;margin-bottom:10px">❌</div>
+    <h3 style="font-size:18px;font-weight:800;color:var(--accent2);margin-bottom:8px">ไม่พบสินค้าชิ้นนี้</h3>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:6px">ไม่มีสินค้าในระบบที่ตรงกับบาร์โค้ดนี้</p>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:var(--accent);font-family:'Space Mono',monospace;word-break:break-all" id="notFoundCode"></div>
+    <div style="background:rgba(255,61,113,0.08);border:1px solid rgba(255,61,113,0.2);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--text-mid);text-align:left">
+      💡 <b>วิธีแก้ไข:</b><br>
+      • ไปหน้า ⚙️ จัดการ → เพิ่ม/แก้ไขสินค้า<br>
+      • กรอกเลขบาร์โค้ดด้านบนให้ตรงกัน<br>
+      • กลับมาสแกนใหม่
+    </div>
+    <button onclick="beepClick();closeNotFound()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:12px;font-family:'Kanit',sans-serif;font-weight:800;cursor:pointer;font-size:15px">🔍 สแกนใหม่</button>
+  </div>
+</div>
+
 <!-- FEATURES INFO -->
 <div class="features-info" id="featuresInfo">
   <button class="features-close" onclick="toggleFeatures()">✕</button>
@@ -610,87 +624,71 @@ function goTo(page) {
   if (page === 'profile') renderProducts();
 }
 
-// CAMERA SCANNER
+// CAMERA SCANNER — ZXing Real Barcode
+let codeReader = null;
+let scanPaused = false;
+let pendingScannedProduct = null;
+let lastScannedCode = null;
+let lastScannedTime = 0;
+
 function startScanning() {
   if (cameraActive) return;
   cameraActive = true;
   scanPaused = false;
-  const video = document.getElementById('video');
-  // Add scanning line to camera area
-  const area = document.getElementById('cameraArea');
-  if (!area.querySelector('.scan-line')) {
-    const line = document.createElement('div');
-    line.className = 'scan-line';
-    area.appendChild(line);
-  }
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-    .then(stream => {
-      video.srcObject = stream;
-      video.style.display = 'block';
-      video.play();
-      document.getElementById('scanStatus').textContent = '📷 พร้อมสแกน…';
-      // Auto scan loop
-      autoScanLoop();
-    })
-    .catch(e => {
-      toast('❌ ไม่สามารถเปิดกล้องได้');
-      cameraActive = false;
-      document.getElementById('scanStatus').textContent = '❌ ไม่สามารถเปิดกล้อง';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
+
+  try {
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+      if (!result || scanPaused) return;
+      const code = result.getText();
+      const now = Date.now();
+      // Debounce 2s ห้ามสแกนซ้ำเดิม
+      if (code === lastScannedCode && now - lastScannedTime < 2000) return;
+      lastScannedCode = code;
+      lastScannedTime = now;
+      handleBarcodeResult(code);
     });
+  } catch(e) {
+    toast('❌ ไม่รองรับ Barcode scanner');
+    cameraActive = false;
+  }
 }
 
-let scanPaused = false;
-let pendingScannedProduct = null;
-let autoScanTimer = null;
-
-// Auto scan every 3s, probability-based simulation
-function autoScanLoop() {
-  if (!cameraActive) return;
-  autoScanTimer = setTimeout(() => {
-    if (!scanPaused && cameraActive && products.length > 0) {
-      // Auto scan: 40% chance each cycle
-      if (Math.random() > 0.6) {
-        const pct = Math.floor(70 + Math.random() * 31); // 70-100%
-        const product = products[Math.floor(Math.random() * products.length)];
-        showScanConfirm(product, pct);
-        return;
-      }
-    }
-    autoScanLoop();
-  }, 3000);
-}
-
-// TAP TO SCAN: instant, 100% match
-function tapToScan() {
-  if (scanPaused) return;
-  if (products.length === 0) { toast('⚠️ ยังไม่มีสินค้า กรุณาเพิ่มสินค้าก่อน'); return; }
-  beepScan();
-  // Animate tap button
-  const btn = document.getElementById('tapScanBtn');
-  btn.style.transform = 'translateX(-50%) scale(0.92)';
-  setTimeout(() => btn.style.transform = 'translateX(-50%) scale(1)', 150);
-  // Flash scanning status
-  document.getElementById('scanStatus').textContent = '🔍 กำลังสแกน…';
-  setTimeout(() => {
-    if (!cameraActive) return;
-    const product = products[Math.floor(Math.random() * products.length)];
-    const pct = 100; // tap = 100% match
-    showScanConfirm(product, pct);
-  }, 400);
-}
-
-function showScanConfirm(product, matchPct = 100) {
+function handleBarcodeResult(code) {
   scanPaused = true;
-  pendingScannedProduct = product;
-  document.getElementById('scanStatus').textContent = '⏸️ หยุดชั่วคราว';
+  document.getElementById('scanStatus').textContent = '⏸️ พบบาร์โค้ด: ' + code;
 
-  // Fill modal with product details
+  // ค้นหาสินค้าจากบาร์โค้ด
+  const product = products.find(p => p.barcode && p.barcode.trim() === code.trim());
+
+  if (product) {
+    beepOk();
+    showScanConfirm(product, code);
+  } else {
+    beepErr();
+    document.getElementById('notFoundCode').textContent = '📊 ' + code;
+    document.getElementById('notFoundModal').classList.add('open');
+  }
+}
+
+function closeNotFound() {
+  document.getElementById('notFoundModal').classList.remove('open');
+  scanPaused = false;
+  lastScannedCode = null;
+  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
+}
+
+function showScanConfirm(product, code) {
+  pendingScannedProduct = product;
+  document.getElementById('scanStatus').textContent = '⏸️ พบสินค้า!';
+
   document.getElementById('scanConfirmName').textContent = product.name;
   document.getElementById('scanConfirmPrice').textContent = '฿' + fmt(product.price);
-  document.getElementById('scanConfirmBarcode').textContent = product.barcode ? '🏷️ ' + product.barcode : '';
+  document.getElementById('scanConfirmBarcode').textContent = '📊 ' + code;
   document.getElementById('scanConfirmStock').textContent = product.stock != null ? `📦 สต็อกคงเหลือ: ${product.stock} ชิ้น` : '';
 
-  // Product image
   const imgEl = document.getElementById('confirmProductImg');
   const emojiEl = document.getElementById('confirmProductEmoji');
   if (product.image) {
@@ -702,41 +700,22 @@ function showScanConfirm(product, matchPct = 100) {
     emojiEl.style.display = 'block';
   }
 
-  // Match bar
-  const pctEl = document.getElementById('matchPct');
-  const fillEl = document.getElementById('matchFill');
-  const noteEl = document.getElementById('matchNote');
-  pctEl.textContent = matchPct + '%';
-  setTimeout(() => { fillEl.style.width = matchPct + '%'; }, 50);
-  if (matchPct === 100) {
-    fillEl.style.background = 'var(--accent3)';
-    noteEl.textContent = '✅ ความแม่นยำสูงสุด';
-    noteEl.style.color = 'var(--accent3)';
-  } else if (matchPct >= 70) {
-    fillEl.style.background = 'var(--accent4)';
-    noteEl.textContent = '⚠️ ผ่านเกณฑ์ 70% — กรุณายืนยัน';
-    noteEl.style.color = 'var(--accent4)';
-  } else {
-    fillEl.style.background = 'var(--accent2)';
-    noteEl.textContent = '❌ ความแม่นยำต่ำเกินไป';
-    noteEl.style.color = 'var(--accent2)';
-  }
-
+  // Barcode = 100% เสมอ
+  document.getElementById('matchPct').textContent = '100%';
   document.getElementById('matchFill').style.width = '0%';
+  setTimeout(() => { document.getElementById('matchFill').style.width = '100%'; }, 60);
+  document.getElementById('matchFill').style.background = 'var(--accent3)';
+  document.getElementById('matchNote').textContent = '✅ บาร์โค้ดตรงกัน 100%';
+  document.getElementById('matchNote').style.color = 'var(--accent3)';
+
   document.getElementById('scanConfirmModal').classList.add('open');
-  beepScan();
 }
 
 function confirmScannedItem() {
   if (!pendingScannedProduct) return;
   const product = pendingScannedProduct;
   const existing = cart.find(i => i.id === product.id);
-  if (existing) {
-    existing.qty++;
-  } else {
-    cart.push({ ...product, qty: 1 });
-  }
-  // Show flash result
+  if (existing) { existing.qty++; } else { cart.push({ ...product, qty: 1 }); }
   showScanFlash(product);
   renderCart();
   closeScanConfirmModal();
@@ -746,38 +725,38 @@ function showScanFlash(product) {
   const flash = document.getElementById('scanResultFlash');
   document.getElementById('flashName').textContent = product.name;
   document.getElementById('flashPrice').textContent = '฿' + fmt(product.price);
-  document.getElementById('flashDetails').textContent = `สต็อก: ${product.stock ?? '—'} | รหัส: ${product.barcode || '—'}`;
+  document.getElementById('flashDetails').textContent = `สต็อก: ${product.stock ?? '—'} | บาร์โค้ด: ${product.barcode || '—'}`;
   flash.style.display = 'block';
   clearTimeout(flash._t);
-  flash._t = setTimeout(() => { flash.style.display = 'none'; }, 2500);
+  flash._t = setTimeout(() => { flash.style.display = 'none'; }, 3000);
 }
 
 function cancelScanConfirm() {
-  toast('❌ ยกเลิกสินค้า');
+  toast('❌ ยกเลิก');
   closeScanConfirmModal();
 }
 
 function closeScanConfirmModal() {
   pendingScannedProduct = null;
   scanPaused = false;
+  lastScannedCode = null;
   document.getElementById('matchFill').style.width = '0%';
   document.getElementById('scanConfirmModal').classList.remove('open');
-  document.getElementById('scanStatus').textContent = '📷 พร้อมสแกน…';
-  autoScanLoop();
+  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
 }
 
 function stopScanning() {
   cameraActive = false;
   scanPaused = false;
   pendingScannedProduct = null;
-  clearTimeout(autoScanTimer);
+  lastScannedCode = null;
+  if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
   document.getElementById('scanConfirmModal').classList.remove('open');
+  document.getElementById('notFoundModal').classList.remove('open');
   document.getElementById('scanResultFlash').style.display = 'none';
   const video = document.getElementById('video');
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.style.display = 'none';
-  }
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); }
+  video.style.display = 'none';
 }
 
 // CART
@@ -786,10 +765,12 @@ function renderCart() {
   document.getElementById('totalAmount').textContent = '฿' + fmt(total);
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   document.getElementById('cartCountLabel').textContent = totalQty + ' รายการ';
-  
+
   let html = '';
   cart.forEach(item => {
-    const imgHtml = item.image ? `<img src="${item.image}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;margin-right:10px;flex-shrink:0">` : `<span style="font-size:28px;margin-right:8px">🛒</span>`;
+    const imgHtml = item.image
+      ? `<img src="${item.image}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;margin-right:10px;flex-shrink:0">`
+      : `<span style="font-size:28px;margin-right:8px">🛒</span>`;
     html += `
       <div class="product-item">
         <div style="display:flex;align-items:center;flex:1">
@@ -805,11 +786,10 @@ function renderCart() {
           <button class="qty-btn" onclick="beepClick();changeQty('${item.id}',1)">+</button>
           <button class="qty-btn" style="background:rgba(255,61,113,0.2);color:var(--accent2)" onclick="beepErr();removeItem('${item.id}')">✕</button>
         </div>
-      </div>
-    `;
+      </div>`;
   });
-  
-  document.getElementById('productsDisplay').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);padding:30px 0">ยังไม่มีสินค้า<br><span style="font-size:12px">แตะปุ่มสแกนหรือรอสแกนอัตโนมัติ</span></p>';
+
+  document.getElementById('productsDisplay').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px">ยังไม่มีสินค้า<br>เล็งกล้องไปที่บาร์โค้ดบนสินค้า</p>';
   document.getElementById('confirmBtn').disabled = cart.length === 0;
 }
 
