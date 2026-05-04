@@ -522,13 +522,86 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
 <!-- HISTORY PAGE -->
 <div class="page" id="history">
-  <div class="profile-header">
+  <div class="profile-header" style="flex-wrap:wrap;gap:6px">
     <h2>📊 ประวัติการขาย</h2>
-    <button class="add-product-btn" onclick="beepClick();loadBillsFromSupabase()">🔄 รีโหลด</button>
+    <div style="display:flex;gap:6px">
+      <button class="add-product-btn" style="background:rgba(0,255,136,0.15);color:var(--accent3);border:1px solid rgba(0,255,136,0.3);font-size:12px" onclick="beepClick();exportDailyReport()">📄 ส่งออก</button>
+      <button class="add-product-btn" onclick="beepClick();loadBillsFromSupabase()">🔄 รีโหลด</button>
+    </div>
   </div>
 
-  <div style="padding:12px 16px">
-    <div id="billsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
+  <!-- DAILY SALES REPORT BANNER -->
+  <div style="margin:12px 16px 0;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(0,255,136,0.08));border:1.5px solid rgba(0,229,255,0.2);border-radius:16px;padding:14px 16px">
+
+    <!-- Header row -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.3px">📋 รายงานยอดขายประจำวัน</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:2px" id="reportDateLabel">—</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--text-dim)">รีเซ็ตใน</div>
+        <div style="font-size:13px;font-weight:800;color:var(--accent4);font-family:'Space Mono',monospace" id="midnightCountdown">00:00:00</div>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">💰 ยอดขายวันนี้</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent3);font-family:'Space Mono',monospace" id="dailyTotal">฿0</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🧾 จำนวนบิล</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent)" id="dailyBillCount">0 บิล</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📦 สินค้าที่ขาย</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent4)" id="dailyItemCount">0 ชิ้น</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📊 เฉลี่ยต่อบิล</div>
+        <div style="font-size:20px;font-weight:900;color:var(--text-mid);font-family:'Space Mono',monospace" id="dailyAverage">฿0</div>
+      </div>
+    </div>
+
+    <!-- Top selling items -->
+    <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-weight:700">🏆 สินค้าขายดีวันนี้</div>
+      <div id="dailyTopItems" style="font-size:12px;color:var(--text-mid)">— ยังไม่มีข้อมูล —</div>
+    </div>
+
+    <!-- Time range & extra info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕐 บิลแรก</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text)" id="dailyFirstBill">—</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕙 บิลล่าสุด</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text)" id="dailyLastBill">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section divider: all bills -->
+  <div style="margin:14px 16px 6px;display:flex;align-items:center;gap:8px">
+    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">📝 ทุกบิลวันนี้</div>
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+    <div style="font-size:11px;color:var(--text-dim)" id="todayBillBadge"></div>
+  </div>
+
+  <div style="padding:0 16px 12px">
+    <div id="billsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px"></div>
+  </div>
+
+  <!-- Divider: older bills -->
+  <div style="margin:4px 16px 6px;display:flex;align-items:center;gap:8px" id="olderDivider" style="display:none">
+    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">🗂️ บิลก่อนหน้า</div>
+    <div style="flex:1;height:1px;background:var(--border)"></div>
+  </div>
+  <div style="padding:0 16px 80px">
+    <div id="olderBillsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px"></div>
   </div>
 
   <div class="navbar">
@@ -1127,22 +1200,167 @@ async function loadBillsFromSupabase() {
   renderBills();
 }
 
-function renderBills() {
-  let html = '';
-  bills.forEach(bill => {
-    const date = new Date(bill.created_at);
-    const dateStr = date.toLocaleDateString('th-TH');
-    html += `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;position:relative" onclick="beepClick();showBillDetail('${bill.id}')">
-        <div style="font-weight:700;font-size:13px;color:var(--accent);">${bill.bill_number}</div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${dateStr}</div>
-        <div style="font-size:12px;margin-top:6px">🛍️ ${bill.items.length} รายการ</div>
-        <div style="font-weight:700;color:var(--accent3);font-size:14px;margin-top:6px">฿${fmt(bill.total_amount)}</div>
-        <button onclick="event.stopPropagation();beepErr();deleteBill('${bill.id}')" style="position:absolute;top:8px;right:8px;background:rgba(255,61,113,0.2);border:none;color:var(--accent2);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px">✕</button>
-      </div>
-    `;
+// ======= DAILY REPORT =======
+function getTodayKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+function isTodayBill(bill) {
+  const d = new Date(bill.created_at);
+  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return key === getTodayKey();
+}
+
+function renderDailyReport() {
+  const todayBills = bills.filter(isTodayBill);
+
+  // Date label
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('reportDateLabel').textContent = '📅 ' + dateLabel;
+
+  // Stats
+  const totalRevenue = todayBills.reduce((s,b) => s + (b.total_amount || 0), 0);
+  const totalItems   = todayBills.reduce((s,b) => s + (b.items || []).reduce((ss,i) => ss + (i.qty||1), 0), 0);
+  const avgPerBill   = todayBills.length ? (totalRevenue / todayBills.length) : 0;
+
+  document.getElementById('dailyTotal').textContent      = '฿' + fmt(totalRevenue);
+  document.getElementById('dailyBillCount').textContent  = todayBills.length + ' บิล';
+  document.getElementById('dailyItemCount').textContent  = totalItems + ' ชิ้น';
+  document.getElementById('dailyAverage').textContent    = '฿' + fmt(Math.round(avgPerBill));
+
+  // Top selling items
+  const itemMap = {};
+  todayBills.forEach(b => {
+    (b.items || []).forEach(i => {
+      const key = i.name || 'ไม่ระบุ';
+      if (!itemMap[key]) itemMap[key] = { qty: 0, total: 0 };
+      itemMap[key].qty   += i.qty || 1;
+      itemMap[key].total += (i.price || 0) * (i.qty || 1);
+    });
   });
-  document.getElementById('billsList').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:30px">ยังไม่มีประวัติการขาย</p>';
+  const topItems = Object.entries(itemMap).sort((a,b) => b[1].qty - a[1].qty).slice(0,3);
+  if (topItems.length) {
+    const medals = ['🥇','🥈','🥉'];
+    document.getElementById('dailyTopItems').innerHTML = topItems.map(([name, data], idx) =>
+      `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <span>${medals[idx] || '•'} ${name}</span>
+        <span style="color:var(--accent3);font-weight:700">${data.qty} ชิ้น · ฿${fmt(data.total)}</span>
+      </div>`
+    ).join('');
+  } else {
+    document.getElementById('dailyTopItems').innerHTML = '<span style="color:var(--text-dim)">— ยังไม่มีข้อมูล —</span>';
+  }
+
+  // First / last bill times
+  if (todayBills.length) {
+    const sorted = [...todayBills].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    document.getElementById('dailyFirstBill').textContent = new Date(sorted[0].created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('dailyLastBill').textContent  = new Date(sorted[sorted.length-1].created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  } else {
+    document.getElementById('dailyFirstBill').textContent = '—';
+    document.getElementById('dailyLastBill').textContent  = '—';
+  }
+
+  document.getElementById('todayBillBadge').textContent = todayBills.length + ' รายการ';
+}
+
+// Midnight countdown + auto-refresh
+function startMidnightClock() {
+  function tick() {
+    const now  = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0);
+    let diff = Math.floor((next - now) / 1000);
+    if (diff <= 0) {
+      renderBills();       // new day → reset
+      renderDailyReport();
+      diff = 86400;
+    }
+    const h = String(Math.floor(diff/3600)).padStart(2,'0');
+    const m = String(Math.floor((diff%3600)/60)).padStart(2,'0');
+    const s = String(diff % 60).padStart(2,'0');
+    const el = document.getElementById('midnightCountdown');
+    if (el) el.textContent = `${h}:${m}:${s}`;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+function buildBillCard(bill, showDate) {
+  const date = new Date(bill.created_at);
+  const timeStr = date.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  const dateStr = showDate ? date.toLocaleDateString('th-TH',{day:'numeric',month:'short'}) + ' ' : '';
+  const totalItems = (bill.items||[]).reduce((s,i)=>s+(i.qty||1),0);
+  return `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;position:relative" onclick="beepClick();showBillDetail('${bill.id}')">
+      <div style="font-weight:700;font-size:12px;color:var(--accent);">${bill.bill_number}</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:3px">🕐 ${dateStr}${timeStr}</div>
+      <div style="font-size:11px;margin-top:5px;color:var(--text-mid)">🛍️ ${totalItems} ชิ้น (${(bill.items||[]).length} รายการ)</div>
+      <div style="font-weight:700;color:var(--accent3);font-size:15px;margin-top:5px">฿${fmt(bill.total_amount)}</div>
+      ${bill.slip_image ? '<div style="font-size:9px;color:var(--accent3);margin-top:3px">📸 มีสลิป</div>' : ''}
+      <button onclick="event.stopPropagation();beepErr();deleteBill('${bill.id}')" style="position:absolute;top:8px;right:8px;background:rgba(255,61,113,0.2);border:none;color:var(--accent2);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px">✕</button>
+    </div>`;
+}
+
+function renderBills() {
+  const todayBills = bills.filter(isTodayBill);
+  const olderBills = bills.filter(b => !isTodayBill(b));
+
+  // Today
+  let todayHtml = '';
+  todayBills.forEach(b => { todayHtml += buildBillCard(b, false); });
+  document.getElementById('billsList').innerHTML = todayHtml ||
+    '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:20px;font-size:13px">ยังไม่มีบิลวันนี้<br><span style="font-size:11px">บิลจะแสดงหลังสแกนและบันทึกสำเร็จ</span></p>';
+
+  // Older
+  const olderDiv = document.getElementById('olderDivider');
+  if (olderBills.length) {
+    olderDiv.style.display = 'flex';
+    let olderHtml = '';
+    olderBills.forEach(b => { olderHtml += buildBillCard(b, true); });
+    document.getElementById('olderBillsList').innerHTML = olderHtml;
+  } else {
+    olderDiv.style.display = 'none';
+    document.getElementById('olderBillsList').innerHTML = '';
+  }
+
+  renderDailyReport();
+}
+
+function exportDailyReport() {
+  const todayBills = bills.filter(isTodayBill);
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const totalRevenue = todayBills.reduce((s,b)=>s+(b.total_amount||0),0);
+  const totalItems   = todayBills.reduce((s,b)=>s+(b.items||[]).reduce((ss,i)=>ss+(i.qty||1),0),0);
+
+  let lines = [
+    `📋 รายงานยอดขายประจำวัน`,
+    `วันที่: ${dateLabel}`,
+    `─────────────────────────`,
+    `จำนวนบิล: ${todayBills.length} บิล`,
+    `สินค้าที่ขาย: ${totalItems} ชิ้น`,
+    `ยอดขายรวม: ฿${fmt(totalRevenue)}`,
+    `เฉลี่ยต่อบิล: ฿${fmt(todayBills.length ? Math.round(totalRevenue/todayBills.length) : 0)}`,
+    `─────────────────────────`,
+    `รายละเอียดบิล:`
+  ];
+  todayBills.forEach((b,i) => {
+    const t = new Date(b.created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    lines.push(`${i+1}. ${b.bill_number} [${t}] — ฿${fmt(b.total_amount)}`);
+    (b.items||[]).forEach(it => lines.push(`   • ${it.name} × ${it.qty||1} = ฿${fmt((it.price||0)*(it.qty||1))}`));
+  });
+  lines.push(`─────────────────────────`);
+  lines.push(`ออกรายงาน: ${now.toLocaleString('th-TH')}`);
+
+  const text = lines.join('\n');
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `รายงานขาย_${getTodayKey()}.txt`;
+  a.click();
+  toast('📄 ส่งออกรายงานแล้ว');
 }
 
 function showBillDetail(billId) {
@@ -1208,6 +1426,7 @@ document.addEventListener('touchstart', () => getAudio(), { once: true });
 const saved = localStorage.getItem('ss_accountName');
 if (saved) document.getElementById('accountName').value = saved;
 loadQRImage();
+startMidnightClock();
 </script>
 </body>
 </html>
