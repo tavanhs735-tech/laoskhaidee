@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="lo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,10 +7,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="POS ร้านค้า">
+<meta name="apple-mobile-web-app-title" content="POS ຮ້ານຄ້າ">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
-<title>ระบบ POS ร้านค้าอัตโนมัติ</title>
+<title>ລະບົບ POS ຮ້ານຄ້າອັດຕະໂນມັດ</title>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
@@ -204,9 +204,9 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="page active" id="pinLock">
   <div class="pin-wrap">
     <div class="pin-logo">🛒</div>
-    <div class="pin-title">ระบบ <span>POS</span></div>
-    <p style="color:var(--text-dim);font-size:13px;margin-top:10px">ร้านค้าอัตโนมัติสแกนสินค้า</p>
-    <div class="pin-label" style="margin-top:26px">ใส่รหัส PIN 6 หลัก</div>
+    <div class="pin-title">ລະບົບ <span>POS</span></div>
+    <p style="color:var(--text-dim);font-size:13px;margin-top:10px">ຮ້ານຄ້າອັດຕະໂນມັດສະແກນສິນຄ້າ</p>
+    <div class="pin-label" style="margin-top:26px">ໃສ່ລະຫັດ PIN 6 ຕົວເລກ</div>
     <div class="pin-dots" id="pinDots">
       <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
       <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
@@ -234,14 +234,14 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="page" id="home">
   <div class="home-wrap">
     <div class="app-logo">🛒</div>
-    <div class="app-title">ระบบ <span>POS</span></div>
-    <p class="app-subtitle">📱 ร้านค้าอัตโนมัติ | 📷 สแกนสินค้า | 💰 ชำระเงิน</p>
+    <div class="app-title">ລະບົບ <span>POS</span></div>
+    <p class="app-subtitle">📱 ຮ້ານຄ້າອັດຕະໂນມັດ | 📷 ສະແກນສິນຄ້າ | 💰 ຊຳລະເງິນ</p>
     <div class="home-btns">
-      <button class="btn btn-primary" onclick="beepClick();goTo('scanner')">📷 เริ่มสแกนสินค้า</button>
-      <button class="btn btn-secondary" onclick="beepClick();goTo('profile')">⚙️ จัดการสินค้า</button>
-      <button class="btn btn-secondary" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ประวัติการขาย</button>
-      <button class="btn btn-secondary" onclick="beepClick();toggleFeatures()">ℹ️ ข้อมูลฟีเจอร์</button>
-      <button class="btn btn-danger" onclick="beepErr();doLogout()">🔒 ออกจากระบบ</button>
+      <button class="btn btn-primary" onclick="beepClick();goTo('scanner')">📷 ເລີ່ມສະແກນສິນຄ້າ</button>
+      <button class="btn btn-secondary" onclick="beepClick();goTo('profile')">⚙️ ຈັດການສິນຄ້າ</button>
+      <button class="btn btn-secondary" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ປະຫວັດການຂາຍ</button>
+      <button class="btn btn-secondary" onclick="beepClick();toggleFeatures()">ℹ️ ຂໍ້ມູນຟີເຈີ</button>
+      <button class="btn btn-danger" onclick="beepErr();doLogout()">🔒 ອອກຈາກລະບົບ</button>
     </div>
   </div>
 </div>
@@ -250,7 +250,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="page" id="scanner">
   <div class="scanner-header">
     <button class="back-btn" onclick="beepClick();stopScanning();goTo('home')">←</button>
-    <h2>สแกนสินค้า</h2>
+    <h2>ສະແກນສິນຄ້າ</h2>
     <span style="font-size:11px;color:var(--accent);font-weight:700" id="scanModeLabel">📊 Barcode</span>
   </div>
 
@@ -264,7 +264,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
       <div style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-bottom:3px solid var(--accent);border-right:3px solid var(--accent);border-radius:0 0 2px 0"></div>
       <div class="scan-line"></div>
     </div>
-    <div class="scan-status" id="scanStatus">📷 กำลังเปิดกล้อง…</div>
+    <div class="scan-status" id="scanStatus">📷 ກຳລັງເປີດກ້ອງ…</div>
   </div>
 
   <!-- Scan result flash -->
@@ -283,57 +283,57 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
   <div class="total-bar">
     <div>
-      <div class="total-label">ยอดรวมทั้งหมด</div>
-      <div style="font-size:11px;color:var(--text-dim)" id="cartCountLabel">0 รายการ</div>
+      <div class="total-label">ຍອດລວມທັງໝົດ</div>
+      <div style="font-size:11px;color:var(--text-dim)" id="cartCountLabel">0 ລາຍການ</div>
     </div>
-    <div class="total-value" id="totalAmount">฿0</div>
+    <div class="total-value" id="totalAmount">₭0</div>
   </div>
 
   <div class="action-btns">
-    <button class="action-btns button btn-clear" onclick="beepErr();clearCart()">🗑️ ล้าง</button>
-    <button class="action-btns button btn-confirm" onclick="beepOk();goToBill()" id="confirmBtn" disabled>✅ สร้างบิล</button>
+    <button class="action-btns button btn-clear" onclick="beepErr();clearCart()">🗑️ ລ້າງ</button>
+    <button class="action-btns button btn-confirm" onclick="beepOk();goToBill()" id="confirmBtn" disabled>✅ ສ້າງບິນ</button>
   </div>
 
   <div class="navbar">
-    <button class="nav-btn active" onclick="beepClick();goTo('scanner')">📷 สแกน</button>
-    <button class="nav-btn" onclick="beepClick();stopScanning();goTo('profile')">⚙️ จัดการ</button>
-    <button class="nav-btn" onclick="beepClick();stopScanning();goTo('home')">🏠 หน้าหลัก</button>
+    <button class="nav-btn active" onclick="beepClick();goTo('scanner')">📷 ສະແກນ</button>
+    <button class="nav-btn" onclick="beepClick();stopScanning();goTo('profile')">⚙️ ຈັດການ</button>
+    <button class="nav-btn" onclick="beepClick();stopScanning();goTo('home')">🏠 ໜ້າຫຼັກ</button>
   </div>
 </div>
 
 <!-- PROFILE PAGE -->
 <div class="page" id="profile">
   <div class="profile-header">
-    <h2>จัดการสินค้า</h2>
-    <button class="add-product-btn" onclick="beepClick();openAddProduct()">➕ เพิ่ม</button>
+    <h2>ຈັດການສິນຄ້າ</h2>
+    <button class="add-product-btn" onclick="beepClick();openAddProduct()">➕ ເພີ່ມ</button>
   </div>
 
   <div class="profile-section">
-    <div class="section-title">🏪 ข้อมูลบัญชี</div>
+    <div class="section-title">🏪 ຂໍ້ມູນບັນຊີ</div>
     <div class="qr-input-group">
-      <label class="form-label">ชื่อบัญชี / เบอร์บัญชี</label>
-      <input type="text" class="form-input" id="accountName" placeholder="เช่น สมชาย ใจดี 123-4-56789-0" oninput="saveAccountName()">
+      <label class="form-label">ຊື່ບັນຊີ / ເບີບັນຊີ</label>
+      <input type="text" class="form-input" id="accountName" placeholder="ເຊັ່ນ: ສົມໃຈ ໃຈດີ 020-XXX-XXXX" oninput="saveAccountName()">
     </div>
     <div class="qr-input-group" style="margin-top:10px">
-      <label class="form-label">📤 อัพโหลดรูปภาพ QR Code ชำระเงิน</label>
+      <label class="form-label">📤 ອັບໂຫລດຮູບ QR Code ຊຳລະເງິນ</label>
       <input type="file" class="form-input" id="qrImageInput" accept="image/*" onchange="handleQRImageUpload(event)" style="padding:8px">
     </div>
     <div class="qr-display" id="qrDisplay" style="display:none;margin-top:10px">
-      <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">🖼️ QR Code สำหรับรับเงิน</p>
+      <p style="font-size:11px;color:var(--text-dim);margin-bottom:8px">🖼️ QR Code ສຳລັບຮັບເງິນ</p>
       <img id="qrImagePreview" style="max-width:180px;border-radius:10px;border:2px solid var(--accent)">
-      <button onclick="clearQRImage()" style="display:block;margin:8px auto 0;background:rgba(255,61,113,0.2);color:var(--accent2);border:none;border-radius:8px;padding:6px 14px;font-family:'Kanit',sans-serif;font-size:12px;cursor:pointer">🗑️ ลบรูป QR</button>
+      <button onclick="clearQRImage()" style="display:block;margin:8px auto 0;background:rgba(255,61,113,0.2);color:var(--accent2);border:none;border-radius:8px;padding:6px 14px;font-family:'Kanit',sans-serif;font-size:12px;cursor:pointer">🗑️ ລົບຮູບ QR</button>
     </div>
   </div>
 
   <div class="profile-section">
-    <div class="section-title">📦 รายการสินค้า</div>
+    <div class="section-title">📦 ລາຍການສິນຄ້າ</div>
     <div class="products-list" id="productsList"></div>
   </div>
 
   <div class="navbar">
-    <button class="nav-btn" onclick="beepClick();goTo('scanner')">📷 สแกน</button>
-    <button class="nav-btn active">⚙️ จัดการ</button>
-    <button class="nav-btn" onclick="beepClick();goTo('home')">🏠 หน้าหลัก</button>
+    <button class="nav-btn" onclick="beepClick();goTo('scanner')">📷 ສະແກນ</button>
+    <button class="nav-btn active">⚙️ ຈັດການ</button>
+    <button class="nav-btn" onclick="beepClick();goTo('home')">🏠 ໜ້າຫຼັກ</button>
   </div>
 </div>
 
@@ -341,7 +341,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="page" id="bill">
   <div class="bill-header">
     <button class="back-btn" onclick="beepClick();goTo('scanner')">←</button>
-    <h2>🧾 ใบเสร็จ</h2>
+    <h2>🧾 ໃບຮັບເງິນ</h2>
     <span id="billOrderNum" style="font-size:11px;color:var(--accent);font-weight:700"></span>
   </div>
 
@@ -349,27 +349,27 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- Store header -->
     <div style="text-align:center;padding:14px 0 8px;border-bottom:1px dashed rgba(255,255,255,0.12);margin-bottom:12px">
-      <div style="font-size:22px;font-weight:900;color:var(--accent)">🛒 ร้านค้า POS</div>
+      <div style="font-size:22px;font-weight:900;color:var(--accent)">🛒 ຮ້ານຄ້າ POS</div>
       <div style="font-size:11px;color:var(--text-dim);margin-top:4px" id="billDateLabel"></div>
       <div style="font-size:12px;color:var(--text-mid);margin-top:2px" id="billAccountBadge"></div>
     </div>
 
     <!-- Items list -->
     <div class="bill-card" style="padding:10px 14px">
-      <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 รายการสินค้า</div>
+      <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 ລາຍການສິນຄ້າ</div>
       <div class="bill-items" id="billItems"></div>
       <!-- Total row -->
       <div style="display:flex;justify-content:space-between;padding:12px 0 4px;border-top:1.5px solid var(--border);margin-top:8px">
-        <span style="font-size:14px;font-weight:700;color:var(--text-dim)">ยอดรวมทั้งหมด</span>
-        <span style="font-size:20px;font-weight:900;color:var(--accent3)" id="billTotalAmount">฿0</span>
+        <span style="font-size:14px;font-weight:700;color:var(--text-dim)">ຍອດລວມທັງໝົດ</span>
+        <span style="font-size:20px;font-weight:900;color:var(--accent3)" id="billTotalAmount">₭0</span>
       </div>
     </div>
 
     <!-- Slip upload -->
     <div class="bill-card" style="padding:10px 14px">
-      <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📸 สลิปโอนเงิน</div>
+      <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📸 ສລິບໂອນເງິນ</div>
       <button class="bill-slip-btn" onclick="document.getElementById('slipInput').click()" id="slipUploadBtn">
-        📸 ถ่ายรูป / อัพโหลดสลิป
+        📸 ຖ່າຍຮູບ / ອັບໂຫລດສລິບ
       </button>
       <input type="file" id="slipInput" class="slip-input" accept="image/*" onchange="handleSlip(event)">
       <img id="slipPreview" style="display:none;max-width:100%;border-radius:10px;margin-top:8px">
@@ -377,22 +377,22 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
     <!-- QR Code payment - CENTERED at bottom, large -->
     <div style="text-align:center;background:var(--surface);border:2px solid var(--accent);border-radius:18px;padding:20px 16px;margin-bottom:8px">
-      <div style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">💳 ชำระเงินผ่าน QR Code</div>
+      <div style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">💳 ຊຳລະເງິນຜ່ານ QR Code</div>
       <div style="font-size:11px;color:var(--text-dim);margin-bottom:14px" id="billQrAccountName"></div>
       <div id="billQrDisplay" style="display:flex;align-items:center;justify-content:center;min-height:180px">
         <img id="billQrImage" style="max-width:220px;width:100%;border-radius:12px;border:3px solid #fff;display:none;box-shadow:0 0 30px rgba(0,229,255,0.3)">
         <div id="billQrEmpty" style="text-align:center;padding:20px">
           <div style="font-size:40px;margin-bottom:8px">📱</div>
-          <p style="font-size:12px;color:var(--text-dim)">ยังไม่มี QR Code<br>กรุณาอัพโหลดในหน้า<br>⚙️ จัดการ → ข้อมูลบัญชี</p>
+          <p style="font-size:12px;color:var(--text-dim)">ຍັງບໍ່ມີ QR Code<br>ກະລຸນາອັບໂຫລດທີ່ໜ້າ<br>⚙️ ຈັດການ → ຂໍ້ມູນບັນຊີ</p>
         </div>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">สแกน QR Code เพื่อโอนเงิน</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">ສະແກນ QR Code ເພື່ອໂອນເງິນ</div>
     </div>
 
     <!-- Action buttons -->
     <div class="bill-actions" style="margin-top:4px">
-      <button class="bill-actions button btn-back-bill" onclick="beepClick();goTo('scanner')">← กลับสแกน</button>
-      <button class="bill-actions button btn-complete" onclick="beepOk();completeBill()">✅ บันทึกบิล</button>
+      <button class="bill-actions button btn-back-bill" onclick="beepClick();goTo('scanner')">← ກັບສະແກນ</button>
+      <button class="bill-actions button btn-complete" onclick="beepOk();completeBill()">✅ ບັນທຶກບິນ</button>
     </div>
   </div>
 </div>
@@ -400,30 +400,30 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <!-- MODAL: Add/Edit Product -->
 <div class="modal-bg" id="productModal">
   <div class="modal">
-    <h3 id="modalTitle">เพิ่มสินค้า</h3>
+    <h3 id="modalTitle">ເພີ່ມສິນຄ້າ</h3>
     <div class="form-group">
-      <label class="form-label">ชื่อสินค้า *</label>
-      <input type="text" class="form-input" id="inputName" placeholder="เช่น น้ำดื่ม 600ml">
+      <label class="form-label">ຊື່ສິນຄ້າ *</label>
+      <input type="text" class="form-input" id="inputName" placeholder="ເຊັ່ນ: ນ້ຳດື່ມ 600ml">
     </div>
     <div class="form-group">
-      <label class="form-label">ราคา (฿) *</label>
+      <label class="form-label">ລາຄາ (₭) *</label>
       <input type="number" class="form-input" id="inputPrice" placeholder="0" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">จำนวนสต็อก</label>
+      <label class="form-label">ຈຳນວນສະຕ໋ອກ</label>
       <input type="number" class="form-input" id="inputStock" placeholder="0" min="0">
     </div>
     <div class="form-group">
-      <label class="form-label">รหัสสินค้า/Barcode (ไม่บังคับ)</label>
-      <input type="text" class="form-input" id="inputBarcode" placeholder="รหัสหรือ Barcode">
+      <label class="form-label">ລະຫັດສິນຄ້າ/Barcode (ບໍ່ບັງຄັບ)</label>
+      <input type="text" class="form-input" id="inputBarcode" placeholder="ລະຫັດ ຫຼື Barcode">
     </div>
     <div class="form-group">
-      <label class="form-label">อัพโหลดรูปสินค้า</label>
+      <label class="form-label">ອັບໂຫລດຮູບສິນຄ້າ</label>
       <input type="file" class="form-input" id="productImage" accept="image/*">
     </div>
     <div class="modal-buttons">
-      <button class="modal-btn modal-cancel" onclick="beepClick();closeProductModal()">ยกเลิก</button>
-      <button class="modal-btn modal-save" onclick="beepOk();saveProduct()">บันทึก</button>
+      <button class="modal-btn modal-cancel" onclick="beepClick();closeProductModal()">ຍົກເລີກ</button>
+      <button class="modal-btn modal-save" onclick="beepOk();saveProduct()">ບັນທຶກ</button>
     </div>
   </div>
 </div>
@@ -431,7 +431,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <!-- SCAN CONFIRM MODAL -->
 <div class="modal-bg" id="scanConfirmModal" style="align-items:center;justify-content:center">
   <div class="modal" style="border-radius:18px;max-width:360px;margin:auto;text-align:center">
-    <div style="font-size:13px;color:var(--accent);font-weight:700;margin-bottom:10px">🔍 พบสินค้า!</div>
+    <div style="font-size:13px;color:var(--accent);font-weight:700;margin-bottom:10px">🔍 ພົບສິນຄ້າ!</div>
 
     <!-- Product image -->
     <div id="confirmImgWrap" style="margin-bottom:10px">
@@ -447,7 +447,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- Match confidence bar -->
     <div style="background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:14px;text-align:left">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);margin-bottom:4px">
-        <span>ความแม่นยำการสแกน</span>
+        <span>ຄວາມແມ່ນຍຳການສະແກນ</span>
         <span style="color:var(--accent3);font-weight:700" id="matchPct"></span>
       </div>
       <div class="confirm-match-bar">
@@ -459,11 +459,11 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- Stock info -->
     <div style="font-size:11px;color:var(--text-dim);margin-bottom:14px" id="scanConfirmStock"></div>
 
-    <p style="font-size:12px;color:var(--accent);margin-bottom:14px;background:rgba(0,229,255,0.08);border-radius:8px;padding:6px 12px">⏸️ หยุดสแกนชั่วคราว — กรุณายืนยันสินค้า</p>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:14px;background:rgba(0,229,255,0.08);border-radius:8px;padding:6px 12px">⏸️ ຢຸດສະແກນຊົ່ວຄາວ — ກະລຸນາຢືນຢັນສິນຄ້າ</p>
 
     <div style="display:flex;gap:10px">
-      <button onclick="beepErr();cancelScanConfirm()" style="flex:1;padding:12px;background:rgba(255,61,113,0.2);color:var(--accent2);border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer;font-size:14px">✕ ยกเลิก</button>
-      <button onclick="beepOk();confirmScannedItem()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent3),#00b360);color:#000;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer;font-size:14px">✅ ยืนยัน</button>
+      <button onclick="beepErr();cancelScanConfirm()" style="flex:1;padding:12px;background:rgba(255,61,113,0.2);color:var(--accent2);border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer;font-size:14px">✕ ຍົກເລີກ</button>
+      <button onclick="beepOk();confirmScannedItem()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--accent3),#00b360);color:#000;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer;font-size:14px">✅ ຢືນຢັນ</button>
     </div>
   </div>
 </div>
@@ -472,77 +472,77 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="modal-bg" id="notFoundModal" style="align-items:center;justify-content:center">
   <div class="modal" style="border-radius:18px;max-width:320px;margin:auto;text-align:center;padding:28px 20px">
     <div style="font-size:64px;margin-bottom:10px">❌</div>
-    <h3 style="font-size:18px;font-weight:800;color:var(--accent2);margin-bottom:8px">ไม่พบสินค้าชิ้นนี้</h3>
-    <p style="font-size:13px;color:var(--text-dim);margin-bottom:6px">ไม่มีสินค้าในระบบที่ตรงกับบาร์โค้ดนี้</p>
+    <h3 style="font-size:18px;font-weight:800;color:var(--accent2);margin-bottom:8px">ບໍ່ພົບສິນຄ້ານີ້</h3>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:6px">ບໍ່ມີສິນຄ້າໃນລະບົບທີ່ກົງກັບບາໂຄ້ດນີ້</p>
     <div style="background:var(--surface2);border-radius:10px;padding:10px;margin-bottom:14px;font-size:13px;color:var(--accent);font-family:'Space Mono',monospace;word-break:break-all" id="notFoundCode"></div>
     <div style="background:rgba(255,61,113,0.08);border:1px solid rgba(255,61,113,0.2);border-radius:10px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:var(--text-mid);text-align:left">
-      💡 <b>วิธีแก้ไข:</b><br>
-      • ไปหน้า ⚙️ จัดการ → เพิ่ม/แก้ไขสินค้า<br>
-      • กรอกเลขบาร์โค้ดด้านบนให้ตรงกัน<br>
-      • กลับมาสแกนใหม่
+      💡 <b>ວິທີແກ້ໄຂ:</b><br>
+      • ໄປໜ້າ ⚙️ ຈັດການ → ເພີ່ມ/ແກ້ໄຂສິນຄ້າ<br>
+      • ຕື່ມເລກບາໂຄ້ດຂ້າງເທິງໃຫ້ກົງກັນ<br>
+      • ກັບມາສະແກນໃໝ່
     </div>
-    <button onclick="beepClick();closeNotFound()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:12px;font-family:'Kanit',sans-serif;font-weight:800;cursor:pointer;font-size:15px">🔍 สแกนใหม่</button>
+    <button onclick="beepClick();closeNotFound()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:12px;font-family:'Kanit',sans-serif;font-weight:800;cursor:pointer;font-size:15px">🔍 ສະແກນໃໝ່</button>
   </div>
 </div>
 
 <!-- FEATURES INFO -->
 <div class="features-info" id="featuresInfo">
   <button class="features-close" onclick="toggleFeatures()">✕</button>
-  <h3 style="margin-bottom:12px;color:var(--accent)">📱 ฟีเจอร์ของระบบ</h3>
+  <h3 style="margin-bottom:12px;color:var(--accent)">📱 ຟີເຈີຂອງລະບົບ</h3>
   
   <div class="feature-item">
-    <div class="feature-name">📷 สแกนสินค้าอัตโนมัติ</div>
-    <div class="feature-desc">เมื่อคุณเปิดหน้าสแกน ระบบจะสแกนรูปภาพสินค้าของคุณโดยอัตโนมัติ และเพิ่มลงตะกร้าเลย</div>
+    <div class="feature-name">📷 ສະແກນສິນຄ້າອັດຕະໂນມັດ</div>
+    <div class="feature-desc">ເມື່ອທ່ານເປີດໜ້າສະແກນ ລະບົບຈະສະແກນຮູບພາບສິນຄ້າຂອງທ່ານໂດຍອັດຕະໂນມັດ ແລ້ວເພີ່ມໃສ່ກະຕ່າ</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">💰 ยอดรวมแบบเรียลไทม์</div>
-    <div class="feature-desc">แสดงยอดรวมให้เห็นเสมอ เพื่อให้ลูกค้าเข้าใจว่าต้องจ่ายเงินเท่าไหร่</div>
+    <div class="feature-name">💰 ຍອດລວມແບບ Real-time</div>
+    <div class="feature-desc">ສະແດງຍອດລວມຕະຫຼອດເວລາ ເພື່ອໃຫ້ລູກຄ້າຮູ້ວ່າຕ້ອງຈ່າຍເງິນເທົ່າໃດ</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">🧮 จำนวนสินค้า</div>
-    <div class="feature-desc">สามารถเพิ่ม/ลดจำนวนสินค้าได้ทันที โดยใช้ปุ่ม + และ -</div>
+    <div class="feature-name">🧮 ຈຳນວນສິນຄ້າ</div>
+    <div class="feature-desc">ສາມາດເພີ່ມ/ຫຼຸດຈຳນວນສິນຄ້າໄດ້ທັນທີ ໂດຍໃຊ້ປຸ່ມ + ແລະ -</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">📋 ใบเสร็จชำระเงิน</div>
-    <div class="feature-desc">หลังจากยืนยันการสแกน จะแสดงใบเสร็จที่มี QR Code ชำระเงิน และสามารถถ่ายรูปสลิปได้</div>
+    <div class="feature-name">📋 ໃບຮັບເງິນ</div>
+    <div class="feature-desc">ຫຼັງຈາກຢືນຢັນການສະແກນ ຈະສະແດງໃບຮັບເງິນທີ່ມີ QR Code ຊຳລະເງິນ ແລ້ວສາມາດຖ່າຍຮູບສລິບໄດ້</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">📱 QR Code ชำระเงิน</div>
-    <div class="feature-desc">ใส่ชื่อบัญชีธนาคารของคุณ จะสร้าง QR Code อัตโนมัติ และแสดงในใบเสร็จ</div>
+    <div class="feature-name">📱 QR Code ຊຳລະເງິນ</div>
+    <div class="feature-desc">ໃສ່ຊື່ບັນຊີທະນາຄານຂອງທ່ານ ຈະສ້າງ QR Code ອັດຕະໂນມັດ ແລ້ວສະແດງໃນໃບຮັບເງິນ</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">📸 ถ่ายรูปสลิปโอนเงิน</div>
-    <div class="feature-desc">เมื่อลูกค้าโอนเงิน สามารถถ่ายรูปสลิปมาใส่ในระบบได้เพื่อเก็บหลักฐาน</div>
+    <div class="feature-name">📸 ຖ່າຍຮູບສລິບໂອນເງິນ</div>
+    <div class="feature-desc">ເມື່ອລູກຄ້າໂອນເງິນ ສາມາດຖ່າຍຮູບສລິບໃສ່ລະບົບໄດ້ເພື່ອເກັບຫຼັກຖານ</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">⚙️ จัดการสินค้า</div>
-    <div class="feature-desc">ในหน้าจัดการ สามารถเพิ่ม ลบ แก้ไขสินค้า และอัพโหลดรูปสินค้าได้</div>
+    <div class="feature-name">⚙️ ຈັດການສິນຄ້າ</div>
+    <div class="feature-desc">ໃນໜ້າຈັດການ ສາມາດເພີ່ມ ລົບ ແກ້ໄຂສິນຄ້າ ແລ້ວອັບໂຫລດຮູບສິນຄ້າໄດ້</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">🔒 ระบบ PIN</div>
-    <div class="feature-desc">เพื่อความปลอดภัย ต้องใส่รหัส PIN 6 หลักก่อนใช้ระบบ (PIN ปัจจุบัน: 123456)</div>
+    <div class="feature-name">🔒 ລະບົບ PIN</div>
+    <div class="feature-desc">ເພື່ອຄວາມປອດໄພ ຕ້ອງໃສ່ລະຫັດ PIN 6 ຕົວເລກ ກ່ອນໃຊ້ລະບົບ (PIN ປັດຈຸບັນ: 123456)</div>
   </div>
 
   <div class="feature-item">
-    <div class="feature-name">💾 เก็บข้อมูลในอุปกรณ์</div>
-    <div class="feature-desc">สินค้า QR Code สลิป และรายการทั้งหมดเก็บอยู่ในอุปกรณ์ของคุณอย่างปลอดภัย</div>
+    <div class="feature-name">💾 ເກັບຂໍ້ມູນໃນອຸປະກອນ</div>
+    <div class="feature-desc">ສິນຄ້າ QR Code ສລິບ ແລ້ວລາຍການທັງໝົດເກັບຢູ່ໃນອຸປະກອນຂອງທ່ານຢ່າງປອດໄພ</div>
   </div>
 </div>
 
 <!-- HISTORY PAGE -->
 <div class="page" id="history">
   <div class="profile-header" style="flex-wrap:wrap;gap:6px">
-    <h2>📊 ประวัติการขาย</h2>
+    <h2>📊 ປະຫວັດການຂາຍ</h2>
     <div style="display:flex;gap:6px">
-      <button class="add-product-btn" style="background:rgba(0,255,136,0.15);color:var(--accent3);border:1px solid rgba(0,255,136,0.3);font-size:12px" onclick="beepClick();exportDailyReport()">📄 ส่งออก</button>
-      <button class="add-product-btn" onclick="beepClick();loadBillsFromSupabase()">🔄 รีโหลด</button>
+      <button class="add-product-btn" style="background:rgba(0,255,136,0.15);color:var(--accent3);border:1px solid rgba(0,255,136,0.3);font-size:12px" onclick="beepClick();exportDailyReport()">📄 ສົ່ງອອກ</button>
+      <button class="add-product-btn" onclick="beepClick();loadBillsFromSupabase()">🔄 ໂຫລດໃໝ່</button>
     </div>
   </div>
 
@@ -552,11 +552,11 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- Header row -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.3px">📋 รายงานยอดขายประจำวัน</div>
+        <div style="font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.3px">📋 ລາຍງານຍອດຂາຍປະຈຳວັນ</div>
         <div style="font-size:11px;color:var(--text-dim);margin-top:2px" id="reportDateLabel">—</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:10px;color:var(--text-dim)">รีเซ็ตใน</div>
+        <div style="font-size:10px;color:var(--text-dim)">ຣີເຊັດໃນ</div>
         <div style="font-size:13px;font-weight:800;color:var(--accent4);font-family:'Space Mono',monospace" id="midnightCountdown">00:00:00</div>
       </div>
     </div>
@@ -564,37 +564,37 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- Stats grid -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">💰 ยอดขายวันนี้</div>
-        <div style="font-size:20px;font-weight:900;color:var(--accent3);font-family:'Space Mono',monospace" id="dailyTotal">฿0</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">💰 ຍອດຂາຍມື້ນີ້</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent3);font-family:'Space Mono',monospace" id="dailyTotal">₭0</div>
       </div>
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🧾 จำนวนบิล</div>
-        <div style="font-size:20px;font-weight:900;color:var(--accent)" id="dailyBillCount">0 บิล</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🧾 ຈຳນວນບິນ</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent)" id="dailyBillCount">0 ບິນ</div>
       </div>
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📦 สินค้าที่ขาย</div>
-        <div style="font-size:20px;font-weight:900;color:var(--accent4)" id="dailyItemCount">0 ชิ้น</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📦 ສິນຄ້າທີ່ຂາຍ</div>
+        <div style="font-size:20px;font-weight:900;color:var(--accent4)" id="dailyItemCount">0 ຊິ້ນ</div>
       </div>
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📊 เฉลี่ยต่อบิล</div>
-        <div style="font-size:20px;font-weight:900;color:var(--text-mid);font-family:'Space Mono',monospace" id="dailyAverage">฿0</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">📊 ສະເລ່ຍຕໍ່ບິນ</div>
+        <div style="font-size:20px;font-weight:900;color:var(--text-mid);font-family:'Space Mono',monospace" id="dailyAverage">₭0</div>
       </div>
     </div>
 
     <!-- Top selling items -->
     <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px;margin-bottom:8px">
-      <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-weight:700">🏆 สินค้าขายดีวันนี้</div>
-      <div id="dailyTopItems" style="font-size:12px;color:var(--text-mid)">— ยังไม่มีข้อมูล —</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;font-weight:700">🏆 ສິນຄ້າຂາຍດີມື້ນີ້</div>
+      <div id="dailyTopItems" style="font-size:12px;color:var(--text-mid)">— ຍັງບໍ່ມີຂໍ້ມູນ —</div>
     </div>
 
     <!-- Time range & extra info -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕐 บิลแรก</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕐 ບິນທຳອິດ</div>
         <div style="font-size:12px;font-weight:700;color:var(--text)" id="dailyFirstBill">—</div>
       </div>
       <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px">
-        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕙 บิลล่าสุด</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">🕙 ບິນລ່າສຸດ</div>
         <div style="font-size:12px;font-weight:700;color:var(--text)" id="dailyLastBill">—</div>
       </div>
     </div>
@@ -602,7 +602,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
   <!-- Section divider: all bills -->
   <div style="margin:14px 16px 6px;display:flex;align-items:center;gap:8px">
-    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">📝 ทุกบิลวันนี้</div>
+    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">📝 ທຸກບິນມື້ນີ້</div>
     <div style="flex:1;height:1px;background:var(--border)"></div>
     <div style="font-size:11px;color:var(--text-dim)" id="todayBillBadge"></div>
   </div>
@@ -613,7 +613,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
 
   <!-- Divider: older bills -->
   <div style="margin:4px 16px 6px;display:flex;align-items:center;gap:8px" id="olderDivider" style="display:none">
-    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">🗂️ บิลก่อนหน้า</div>
+    <div style="font-size:12px;color:var(--text-dim);font-weight:700;white-space:nowrap">🗂️ ບິນກ່ອນໜ້າ</div>
     <div style="flex:1;height:1px;background:var(--border)"></div>
   </div>
   <div style="padding:0 16px 80px">
@@ -621,9 +621,9 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 
   <div class="navbar">
-    <button class="nav-btn" onclick="beepClick();goTo('scanner')">📷 สแกน</button>
-    <button class="nav-btn" onclick="beepClick();goTo('profile')">⚙️ จัดการ</button>
-    <button class="nav-btn active" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ประวัติ</button>
+    <button class="nav-btn" onclick="beepClick();goTo('scanner')">📷 ສະແກນ</button>
+    <button class="nav-btn" onclick="beepClick();goTo('profile')">⚙️ ຈັດການ</button>
+    <button class="nav-btn active" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ປະຫວັດ</button>
   </div>
 </div>
 
@@ -690,7 +690,7 @@ function checkPin() {
     updateDots();
   } else {
     beepErr();
-    document.getElementById('pinError').textContent = 'รหัส PIN ไม่ถูกต้อง!';
+    document.getElementById('pinError').textContent = 'ລະຫັດ PIN ບໍ່ຖືກຕ້ອງ!';
     pinBuffer = '';
     updateDots();
     setTimeout(() => { document.getElementById('pinError').textContent = '&nbsp;'; }, 2000);
@@ -725,7 +725,7 @@ function startScanning() {
   cameraActive = true;
   scanPaused = false;
   document.getElementById('video').style.display = 'block';
-  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
+  document.getElementById('scanStatus').textContent = '🔍 ເລັ່ງບາໂຄ້ດທີ່ກອບ…';
 
   try {
     codeReader = new ZXing.BrowserMultiFormatReader();
@@ -733,23 +733,23 @@ function startScanning() {
       if (!result || scanPaused) return;
       const code = result.getText();
       const now = Date.now();
-      // Debounce 2s ห้ามสแกนซ้ำเดิม
+      // Debounce 2s
       if (code === lastScannedCode && now - lastScannedTime < 2000) return;
       lastScannedCode = code;
       lastScannedTime = now;
       handleBarcodeResult(code);
     });
   } catch(e) {
-    toast('❌ ไม่รองรับ Barcode scanner');
+    toast('❌ ບໍ່ຮອງຮັບ Barcode scanner');
     cameraActive = false;
   }
 }
 
 function handleBarcodeResult(code) {
   scanPaused = true;
-  document.getElementById('scanStatus').textContent = '⏸️ พบบาร์โค้ด: ' + code;
+  document.getElementById('scanStatus').textContent = '⏸️ ພົບບາໂຄ້ດ: ' + code;
 
-  // ค้นหาสินค้าจากบาร์โค้ด
+  // ຄົ້ນຫາສິນຄ້າຈາກບາໂຄ້ດ
   const product = products.find(p => p.barcode && p.barcode.trim() === code.trim());
 
   if (product) {
@@ -766,17 +766,17 @@ function closeNotFound() {
   document.getElementById('notFoundModal').classList.remove('open');
   scanPaused = false;
   lastScannedCode = null;
-  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
+  document.getElementById('scanStatus').textContent = '🔍 ເລັ່ງບາໂຄ້ດທີ່ກອບ…';
 }
 
 function showScanConfirm(product, code) {
   pendingScannedProduct = product;
-  document.getElementById('scanStatus').textContent = '⏸️ พบสินค้า!';
+  document.getElementById('scanStatus').textContent = '⏸️ ພົບສິນຄ້າ!';
 
   document.getElementById('scanConfirmName').textContent = product.name;
-  document.getElementById('scanConfirmPrice').textContent = '฿' + fmt(product.price);
+  document.getElementById('scanConfirmPrice').textContent = '₭' + fmt(product.price);
   document.getElementById('scanConfirmBarcode').textContent = '📊 ' + code;
-  document.getElementById('scanConfirmStock').textContent = product.stock != null ? `📦 สต็อกคงเหลือ: ${product.stock} ชิ้น` : '';
+  document.getElementById('scanConfirmStock').textContent = product.stock != null ? `📦 ສະຕ໋ອກຍັງເຫຼືອ: ${product.stock} ຊິ້ນ` : '';
 
   const imgEl = document.getElementById('confirmProductImg');
   const emojiEl = document.getElementById('confirmProductEmoji');
@@ -789,12 +789,12 @@ function showScanConfirm(product, code) {
     emojiEl.style.display = 'block';
   }
 
-  // Barcode = 100% เสมอ
+  // Barcode = 100% ສະເໝີ
   document.getElementById('matchPct').textContent = '100%';
   document.getElementById('matchFill').style.width = '0%';
   setTimeout(() => { document.getElementById('matchFill').style.width = '100%'; }, 60);
   document.getElementById('matchFill').style.background = 'var(--accent3)';
-  document.getElementById('matchNote').textContent = '✅ บาร์โค้ดตรงกัน 100%';
+  document.getElementById('matchNote').textContent = '✅ ບາໂຄ້ດກົງກັນ 100%';
   document.getElementById('matchNote').style.color = 'var(--accent3)';
 
   document.getElementById('scanConfirmModal').classList.add('open');
@@ -813,15 +813,15 @@ function confirmScannedItem() {
 function showScanFlash(product) {
   const flash = document.getElementById('scanResultFlash');
   document.getElementById('flashName').textContent = product.name;
-  document.getElementById('flashPrice').textContent = '฿' + fmt(product.price);
-  document.getElementById('flashDetails').textContent = `สต็อก: ${product.stock ?? '—'} | บาร์โค้ด: ${product.barcode || '—'}`;
+  document.getElementById('flashPrice').textContent = '₭' + fmt(product.price);
+  document.getElementById('flashDetails').textContent = `ສະຕ໋ອກ: ${product.stock ?? '—'} | ບາໂຄ້ດ: ${product.barcode || '—'}`;
   flash.style.display = 'block';
   clearTimeout(flash._t);
   flash._t = setTimeout(() => { flash.style.display = 'none'; }, 3000);
 }
 
 function cancelScanConfirm() {
-  toast('❌ ยกเลิก');
+  toast('❌ ຍົກເລີກ');
   closeScanConfirmModal();
 }
 
@@ -831,7 +831,7 @@ function closeScanConfirmModal() {
   lastScannedCode = null;
   document.getElementById('matchFill').style.width = '0%';
   document.getElementById('scanConfirmModal').classList.remove('open');
-  document.getElementById('scanStatus').textContent = '🔍 เล็งบาร์โค้ดที่กรอบ…';
+  document.getElementById('scanStatus').textContent = '🔍 ເລັ່ງບາໂຄ້ດທີ່ກອບ…';
 }
 
 function stopScanning() {
@@ -851,9 +851,9 @@ function stopScanning() {
 // CART
 function renderCart() {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  document.getElementById('totalAmount').textContent = '฿' + fmt(total);
+  document.getElementById('totalAmount').textContent = '₭' + fmt(total);
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
-  document.getElementById('cartCountLabel').textContent = totalQty + ' รายการ';
+  document.getElementById('cartCountLabel').textContent = totalQty + ' ລາຍການ';
 
   let html = '';
   cart.forEach(item => {
@@ -866,7 +866,7 @@ function renderCart() {
           ${imgHtml}
           <div class="product-info">
             <div class="product-name">${item.name}</div>
-            <div class="product-price">฿${fmt(item.price)} × ${item.qty} = <b>฿${fmt(item.price * item.qty)}</b></div>
+            <div class="product-price">₭${fmt(item.price)} × ${item.qty} = <b>₭${fmt(item.price * item.qty)}</b></div>
           </div>
         </div>
         <div class="qty-box">
@@ -878,7 +878,7 @@ function renderCart() {
       </div>`;
   });
 
-  document.getElementById('productsDisplay').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px">ยังไม่มีสินค้า<br>เล็งกล้องไปที่บาร์โค้ดบนสินค้า</p>';
+  document.getElementById('productsDisplay').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);padding:30px 0;font-size:13px">ຍັງບໍ່ມີສິນຄ້າ<br>ເລັ່ງກ້ອງໄປທີ່ບາໂຄ້ດເທິງສິນຄ້າ</p>';
   document.getElementById('confirmBtn').disabled = cart.length === 0;
 }
 
@@ -899,7 +899,7 @@ function removeItem(id) {
 function clearCart() {
   cart = [];
   renderCart();
-  toast('🗑️ ลบทั้งหมดแล้ว');
+  toast('🗑️ ລ້າງໝົດແລ້ວ');
 }
 
 function goToBill() {
@@ -907,13 +907,13 @@ function goToBill() {
   const accountName = document.getElementById('accountName').value || '';
   const orderNum = 'ORD-' + Date.now().toString().slice(-6);
   const now = new Date();
-  const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-  const timeStr = now.toLocaleTimeString('th-TH');
+  const dateStr = now.toLocaleDateString('lo-LA', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('lo-LA');
 
   document.getElementById('billOrderNum').textContent = orderNum;
   document.getElementById('billDateLabel').textContent = `📅 ${dateStr}  ⏰ ${timeStr}`;
   document.getElementById('billAccountBadge').textContent = accountName ? `👤 ${accountName}` : '';
-  document.getElementById('billQrAccountName').textContent = accountName || 'สแกน QR Code เพื่อชำระเงิน';
+  document.getElementById('billQrAccountName').textContent = accountName || 'ສະແກນ QR Code ເພື່ອຊຳລະເງິນ';
 
   // QR image
   const billQrImg = document.getElementById('billQrImage');
@@ -939,16 +939,16 @@ function goToBill() {
           ${imgHtml}
           <div>
             <div class="item-name" style="font-weight:700">${item.name}</div>
-            <div class="item-details">จำนวน ${item.qty} × ฿${fmt(item.price)}</div>
+            <div class="item-details">ຈຳນວນ ${item.qty} × ₭${fmt(item.price)}</div>
           </div>
         </div>
-        <div class="item-price">฿${fmt(item.price * item.qty)}</div>
+        <div class="item-price">₭${fmt(item.price * item.qty)}</div>
       </div>`;
   });
   document.getElementById('billItems').innerHTML = html;
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  document.getElementById('billTotalAmount').textContent = '฿' + fmt(total);
+  document.getElementById('billTotalAmount').textContent = '₭' + fmt(total);
 
   document.getElementById('slipPreview').style.display = 'none';
   document.getElementById('slipPreview').src = '';
@@ -966,7 +966,7 @@ function handleSlip(e) {
     document.getElementById('slipPreview').src = ev.target.result;
     document.getElementById('slipPreview').style.display = 'block';
     document.getElementById('slipUploadBtn').style.display = 'none';
-    toast('✅ บันทึกรูปสลิป');
+    toast('✅ ບັນທຶກຮູບສລິບ');
   };
   reader.readAsDataURL(file);
 }
@@ -978,8 +978,8 @@ function completeBill() {
   const billData = {
     id: orderNum,
     date: new Date().toISOString(),
-    customer: document.getElementById('accountName').value || 'ลูกค้าทั่วไป',
-    account: document.getElementById('accountName').value || 'ไม่ระบุ',
+    customer: document.getElementById('accountName').value || 'ລູກຄ້າທົ່ວໄປ',
+    account: document.getElementById('accountName').value || 'ບໍ່ລະບຸ',
     items: cart,
     total: cart.reduce((s, i) => s + i.price * i.qty, 0),
     slip: slip || null
@@ -990,7 +990,7 @@ function completeBill() {
   renderCart();
   document.getElementById('slipInput').value = '';
   beepOk();
-  toast(`✅ บันทึกบิล ${orderNum} สำเร็จ!`);
+  toast(`✅ ບັນທຶກບິນ ${orderNum} ສຳເລັດ!`);
   goTo('scanner');
 }
 
@@ -1005,21 +1005,21 @@ function renderProducts() {
       <div class="product-card">
         ${imgHtml}
         <div class="product-card-name">${p.name}</div>
-        <div class="product-card-price">฿${fmt(p.price)}</div>
-        <div class="product-card-stock">สต็อก: ${p.stock || 0}${p.barcode ? ' | 🏷️ '+p.barcode : ''}</div>
+        <div class="product-card-price">₭${fmt(p.price)}</div>
+        <div class="product-card-stock">ສະຕ໋ອກ: ${p.stock || 0}${p.barcode ? ' | 🏷️ '+p.barcode : ''}</div>
         <div class="product-actions">
-          <button onclick="beepClick();editProduct('${p.id}')">✎ แก้ไข</button>
+          <button onclick="beepClick();editProduct('${p.id}')">✎ ແກ້ໄຂ</button>
           <button onclick="beepErr();deleteProduct('${p.id}')" style="background:rgba(255,61,113,0.2);color:var(--accent2)">✕</button>
         </div>
       </div>
     `;
   });
-  document.getElementById('productsList').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:20px">ยังไม่มีสินค้า<br>กด ➕ เพิ่มสินค้า</p>';
+  document.getElementById('productsList').innerHTML = html || '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:20px">ຍັງບໍ່ມີສິນຄ້າ<br>ກົດ ➕ ເພີ່ມສິນຄ້າ</p>';
 }
 
 function openAddProduct() {
   editingProductId = null;
-  document.getElementById('modalTitle').textContent = 'เพิ่มสินค้า';
+  document.getElementById('modalTitle').textContent = 'ເພີ່ມສິນຄ້າ';
   document.getElementById('inputName').value = '';
   document.getElementById('inputPrice').value = '';
   document.getElementById('inputStock').value = '';
@@ -1032,7 +1032,7 @@ function editProduct(id) {
   const p = products.find(x => x.id === id);
   if (!p) return;
   editingProductId = id;
-  document.getElementById('modalTitle').textContent = 'แก้ไขสินค้า';
+  document.getElementById('modalTitle').textContent = 'ແກ້ໄຂສິນຄ້າ';
   document.getElementById('inputName').value = p.name;
   document.getElementById('inputPrice').value = p.price;
   document.getElementById('inputStock').value = p.stock || 0;
@@ -1053,7 +1053,7 @@ function saveProduct() {
   
   if (!name || isNaN(price) || price < 0) {
     beepErr();
-    toast('⚠️ กรุณาใส่ชื่อและราคา');
+    toast('⚠️ ກະລຸນາໃສ່ຊື່ ແລ້ວລາຄາ');
     return;
   }
   
@@ -1063,12 +1063,12 @@ function saveProduct() {
       const idx = products.findIndex(p => p.id === editingProductId);
       if (idx >= 0) {
         products[idx] = { ...products[idx], name, price, stock, barcode, ...(imageData ? { image: imageData } : {}) };
-        toast('✏️ แก้ไขสำเร็จ');
+        toast('✏️ ແກ້ໄຂສຳເລັດ');
         beepOk();
       }
     } else {
       products.push({ id: String(Date.now()), name, price, stock, barcode, image: imageData || null });
-      toast('✅ เพิ่มสำเร็จ');
+      toast('✅ ເພີ່ມສຳເລັດ');
       beepOk();
     }
     localStorage.setItem('ss_products', JSON.stringify(products));
@@ -1085,12 +1085,12 @@ function saveProduct() {
 }
 
 function deleteProduct(id) {
-  if (confirm('ลบสินค้านี้ใช่ไหม?')) {
+  if (confirm('ລົບສິນຄ້າີບມັ່ນຳ??')) {
     products = products.filter(p => p.id !== id);
     localStorage.setItem('ss_products', JSON.stringify(products));
     renderProducts();
     beepOk();
-    toast('🗑️ ลบสำเร็จ');
+    toast('🗑️ ລົບສຳເລັດ');
   }
 }
 
@@ -1106,7 +1106,7 @@ function handleQRImageUpload(e) {
     localStorage.setItem('ss_qrImage', savedQRImageData);
     document.getElementById('qrImagePreview').src = savedQRImageData;
     document.getElementById('qrDisplay').style.display = 'block';
-    toast('✅ บันทึกรูป QR Code แล้ว');
+    toast('✅ ບັນທຶກຮູບ QR Code ແລ້ວ');
   };
   reader.readAsDataURL(file);
 }
@@ -1117,7 +1117,7 @@ function clearQRImage() {
   document.getElementById('qrImagePreview').src = '';
   document.getElementById('qrDisplay').style.display = 'none';
   document.getElementById('qrImageInput').value = '';
-  toast('🗑️ ลบรูป QR แล้ว');
+  toast('🗑️ ລົບຮູບ QR ແລ້ວ');
 }
 
 function saveAccountName() {
@@ -1139,7 +1139,7 @@ function toggleFeatures() {
 }
 
 // HELPERS
-function fmt(n) { return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 0 }); }
+function fmt(n) { return Number(n).toLocaleString('lo-LA', { minimumFractionDigits: 0 }); }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500); }
 
 // SUPABASE FUNCTIONS
@@ -1186,7 +1186,7 @@ let bills = [];
 async function saveBillToSupabase(billData) {
   const result = await sb.post('bills', {
     bill_number: billData.id,
-    customer_name: billData.customer || 'ไม่ระบุ',
+    customer_name: billData.customer || 'ບໍ່ລະບຸ',
     account_name: billData.account,
     total_amount: billData.total,
     items_json: JSON.stringify(billData.items),
@@ -1197,7 +1197,7 @@ async function saveBillToSupabase(billData) {
   if (result) {
     bills.unshift({ ...result, items: billData.items });
     localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ บันทึกบิลแล้ว');
+    toast('✅ ບັນທຶກບິນແລ້ວ');
   }
 }
 
@@ -1209,7 +1209,7 @@ async function loadBillsFromSupabase() {
       items: JSON.parse(b.items_json || '[]')
     }));
     localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ โหลดข้อมูลบิล');
+    toast('✅ ໂຫລດຂໍ້ມູນບິນ');
   } else {
     bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
   }
@@ -1233,7 +1233,7 @@ function renderDailyReport() {
 
   // Date label
   const now = new Date();
-  const dateLabel = now.toLocaleDateString('th-TH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const dateLabel = now.toLocaleDateString('lo-LA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   document.getElementById('reportDateLabel').textContent = '📅 ' + dateLabel;
 
   // Stats
@@ -1241,16 +1241,16 @@ function renderDailyReport() {
   const totalItems   = todayBills.reduce((s,b) => s + (b.items || []).reduce((ss,i) => ss + (i.qty||1), 0), 0);
   const avgPerBill   = todayBills.length ? (totalRevenue / todayBills.length) : 0;
 
-  document.getElementById('dailyTotal').textContent      = '฿' + fmt(totalRevenue);
-  document.getElementById('dailyBillCount').textContent  = todayBills.length + ' บิล';
-  document.getElementById('dailyItemCount').textContent  = totalItems + ' ชิ้น';
-  document.getElementById('dailyAverage').textContent    = '฿' + fmt(Math.round(avgPerBill));
+  document.getElementById('dailyTotal').textContent      = '₭' + fmt(totalRevenue);
+  document.getElementById('dailyBillCount').textContent  = todayBills.length + ' ບິນ';
+  document.getElementById('dailyItemCount').textContent  = totalItems + ' ຊິ້ນ';
+  document.getElementById('dailyAverage').textContent    = '₭' + fmt(Math.round(avgPerBill));
 
   // Top selling items
   const itemMap = {};
   todayBills.forEach(b => {
     (b.items || []).forEach(i => {
-      const key = i.name || 'ไม่ระบุ';
+      const key = i.name || 'ບໍ່ລະບຸ';
       if (!itemMap[key]) itemMap[key] = { qty: 0, total: 0 };
       itemMap[key].qty   += i.qty || 1;
       itemMap[key].total += (i.price || 0) * (i.qty || 1);
@@ -1262,24 +1262,24 @@ function renderDailyReport() {
     document.getElementById('dailyTopItems').innerHTML = topItems.map(([name, data], idx) =>
       `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
         <span>${medals[idx] || '•'} ${name}</span>
-        <span style="color:var(--accent3);font-weight:700">${data.qty} ชิ้น · ฿${fmt(data.total)}</span>
+        <span style="color:var(--accent3);font-weight:700">${data.qty} ຊິ້ນ · ₭${fmt(data.total)}</span>
       </div>`
     ).join('');
   } else {
-    document.getElementById('dailyTopItems').innerHTML = '<span style="color:var(--text-dim)">— ยังไม่มีข้อมูล —</span>';
+    document.getElementById('dailyTopItems').innerHTML = '<span style="color:var(--text-dim)">— ຍັງບໍ່ມີຂໍ້ມູນ —</span>';
   }
 
   // First / last bill times
   if (todayBills.length) {
     const sorted = [...todayBills].sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-    document.getElementById('dailyFirstBill').textContent = new Date(sorted[0].created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('dailyLastBill').textContent  = new Date(sorted[sorted.length-1].created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('dailyFirstBill').textContent = new Date(sorted[0].created_at).toLocaleTimeString('lo-LA',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('dailyLastBill').textContent  = new Date(sorted[sorted.length-1].created_at).toLocaleTimeString('lo-LA',{hour:'2-digit',minute:'2-digit'});
   } else {
     document.getElementById('dailyFirstBill').textContent = '—';
     document.getElementById('dailyLastBill').textContent  = '—';
   }
 
-  document.getElementById('todayBillBadge').textContent = todayBills.length + ' รายการ';
+  document.getElementById('todayBillBadge').textContent = todayBills.length + ' ລາຍການ';
 }
 
 // Midnight countdown + auto-refresh
@@ -1305,16 +1305,16 @@ function startMidnightClock() {
 
 function buildBillCard(bill, showDate) {
   const date = new Date(bill.created_at);
-  const timeStr = date.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  const dateStr = showDate ? date.toLocaleDateString('th-TH',{day:'numeric',month:'short'}) + ' ' : '';
+  const timeStr = date.toLocaleTimeString('lo-LA',{hour:'2-digit',minute:'2-digit'});
+  const dateStr = showDate ? date.toLocaleDateString('lo-LA',{day:'numeric',month:'short'}) + ' ' : '';
   const totalItems = (bill.items||[]).reduce((s,i)=>s+(i.qty||1),0);
   return `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .2s;position:relative" onclick="beepClick();showBillDetail('${bill.id}')">
       <div style="font-weight:700;font-size:12px;color:var(--accent);">${bill.bill_number}</div>
       <div style="font-size:10px;color:var(--text-dim);margin-top:3px">🕐 ${dateStr}${timeStr}</div>
-      <div style="font-size:11px;margin-top:5px;color:var(--text-mid)">🛍️ ${totalItems} ชิ้น (${(bill.items||[]).length} รายการ)</div>
-      <div style="font-weight:700;color:var(--accent3);font-size:15px;margin-top:5px">฿${fmt(bill.total_amount)}</div>
-      ${bill.slip_image ? '<div style="font-size:9px;color:var(--accent3);margin-top:3px">📸 มีสลิป</div>' : ''}
+      <div style="font-size:11px;margin-top:5px;color:var(--text-mid)">🛍️ ${totalItems} ຊິ້ນ (${(bill.items||[]).length} ລາຍການ)</div>
+      <div style="font-weight:700;color:var(--accent3);font-size:15px;margin-top:5px">₭${fmt(bill.total_amount)}</div>
+      ${bill.slip_image ? '<div style="font-size:9px;color:var(--accent3);margin-top:3px">📸 ມີສລິບ</div>' : ''}
       <button onclick="event.stopPropagation();beepErr();deleteBill('${bill.id}')" style="position:absolute;top:8px;right:8px;background:rgba(255,61,113,0.2);border:none;color:var(--accent2);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px">✕</button>
     </div>`;
 }
@@ -1327,7 +1327,7 @@ function renderBills() {
   let todayHtml = '';
   todayBills.forEach(b => { todayHtml += buildBillCard(b, false); });
   document.getElementById('billsList').innerHTML = todayHtml ||
-    '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:20px;font-size:13px">ยังไม่มีบิลวันนี้<br><span style="font-size:11px">บิลจะแสดงหลังสแกนและบันทึกสำเร็จ</span></p>';
+    '<p style="text-align:center;color:var(--text-dim);grid-column:1/-1;padding:20px;font-size:13px">ຍັງບໍ່ມີບິນມື້ນີ້<br><span style="font-size:11px">ບິນຈະສະແດງຫຼັງສະແກນ ແລ້ວບັນທຶກສຳເລັດ</span></p>';
 
   // Older
   const olderDiv = document.getElementById('olderDivider');
@@ -1347,36 +1347,36 @@ function renderBills() {
 function exportDailyReport() {
   const todayBills = bills.filter(isTodayBill);
   const now = new Date();
-  const dateLabel = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const dateLabel = now.toLocaleDateString('lo-LA',{year:'numeric',month:'long',day:'numeric'});
   const totalRevenue = todayBills.reduce((s,b)=>s+(b.total_amount||0),0);
   const totalItems   = todayBills.reduce((s,b)=>s+(b.items||[]).reduce((ss,i)=>ss+(i.qty||1),0),0);
 
   let lines = [
-    `📋 รายงานยอดขายประจำวัน`,
-    `วันที่: ${dateLabel}`,
+    `📋 ລາຍງານຍອດຂາຍປະຈຳວັນ`,
+    `ວັນທີ: ${dateLabel}`,
     `─────────────────────────`,
-    `จำนวนบิล: ${todayBills.length} บิล`,
-    `สินค้าที่ขาย: ${totalItems} ชิ้น`,
-    `ยอดขายรวม: ฿${fmt(totalRevenue)}`,
-    `เฉลี่ยต่อบิล: ฿${fmt(todayBills.length ? Math.round(totalRevenue/todayBills.length) : 0)}`,
+    `ຈຳນວນບິນ: ${todayBills.length} ບິນ`,
+    `ສິນຄ້າທີ່ຂາຍ: ${totalItems} ຊິ້ນ`,
+    `ຍອດຂາຍລວມ: ₭${fmt(totalRevenue)}`,
+    `ສະເລ່ຍຕໍ່ບິນ: ₭${fmt(todayBills.length ? Math.round(totalRevenue/todayBills.length) : 0)}`,
     `─────────────────────────`,
-    `รายละเอียดบิล:`
+    `ລາຍລະອຽດບິນ:`
   ];
   todayBills.forEach((b,i) => {
-    const t = new Date(b.created_at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    lines.push(`${i+1}. ${b.bill_number} [${t}] — ฿${fmt(b.total_amount)}`);
-    (b.items||[]).forEach(it => lines.push(`   • ${it.name} × ${it.qty||1} = ฿${fmt((it.price||0)*(it.qty||1))}`));
+    const t = new Date(b.created_at).toLocaleTimeString('lo-LA',{hour:'2-digit',minute:'2-digit'});
+    lines.push(`${i+1}. ${b.bill_number} [${t}] — ₭${fmt(b.total_amount)}`);
+    (b.items||[]).forEach(it => lines.push(`   • ${it.name} × ${it.qty||1} = ₭${fmt((it.price||0)*(it.qty||1))}`));
   });
   lines.push(`─────────────────────────`);
-  lines.push(`ออกรายงาน: ${now.toLocaleString('th-TH')}`);
+  lines.push(`ອອກລາຍງານ: ${now.toLocaleString('lo-LA')}`);
 
   const text = lines.join('\n');
   const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `รายงานขาย_${getTodayKey()}.txt`;
+  a.download = `ລາຍງານຂາຍ_${getTodayKey()}.txt`;
   a.click();
-  toast('📄 ส่งออกรายงานแล้ว');
+  toast('📄 ສົ່ງອອກລາຍງານແລ້ວ');
 }
 
 function showBillDetail(billId) {
@@ -1384,15 +1384,15 @@ function showBillDetail(billId) {
   if (!bill) return;
   
   const date = new Date(bill.created_at);
-  const dateStr = date.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-  const timeStr = date.toLocaleTimeString('th-TH');
+  const dateStr = date.toLocaleDateString('lo-LA', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = date.toLocaleTimeString('lo-LA');
   
   let itemsHtml = '';
   bill.items.forEach(item => {
     itemsHtml += `
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
         <span>${item.name || item.name} × ${item.qty}</span>
-        <span style="color:var(--accent3);font-weight:700">฿${fmt(item.price * item.qty)}</span>
+        <span style="color:var(--accent3);font-weight:700">₭${fmt(item.price * item.qty)}</span>
       </div>
     `;
   });
@@ -1404,21 +1404,21 @@ function showBillDetail(billId) {
         
         <div style="text-align:center;margin-bottom:16px">
           <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">${bill.bill_number}</h3>
-          <p style="color:var(--text-dim);font-size:12px">${dateStr} เวลา ${timeStr}</p>
+          <p style="color:var(--text-dim);font-size:12px">${dateStr} ເວລາ ${timeStr}</p>
         </div>
         
         <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">📱 บัญชี: ${bill.account_name}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">📱 ບັນຊີ: ${bill.account_name}</div>
           ${itemsHtml}
           <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1.5px solid var(--border);margin-top:10px;font-weight:700;font-size:14px;color:var(--accent3)">
-            <span>รวม:</span>
-            <span>฿${fmt(bill.total_amount)}</span>
+            <span>ລວມ:</span>
+            <span>₭${fmt(bill.total_amount)}</span>
           </div>
         </div>
         
         ${bill.slip_image ? `<img src="${bill.slip_image}" style="width:100%;border-radius:10px;margin-bottom:12px">` : ''}
         
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer">ปิด</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer">ປິດ</button>
       </div>
     </div>
   `;
@@ -1427,14 +1427,14 @@ function showBillDetail(billId) {
 }
 
 async function deleteBill(billId) {
-  if (!confirm('ลบบิลนี้ใช่ไหม?')) return;
+  if (!confirm('ລົບບິນນີ້ແມ່ນບໍ?')) return;
   
   bills = bills.filter(b => b.id !== billId);
   localStorage.setItem('ss_bills', JSON.stringify(bills));
   await sb.delete('bills', billId);
   renderBills();
   beepOk();
-  toast('🗑️ ลบบิล');
+  toast('🗑️ ລົບບິນ');
 }
 
 // INIT
