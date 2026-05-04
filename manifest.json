@@ -1,0 +1,26 @@
+{
+  "name": "ระบบ POS ร้านค้าอัตโนมัติ",
+  "short_name": "POS ร้านค้า",
+  "description": "ระบบ POS สำหรับร้านค้าอัตโนมัติ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#00e5ff",
+  "lang": "th",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
