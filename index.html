@@ -20,7 +20,6 @@
     });
   }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 <style>
@@ -239,7 +238,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="home-btns">
       <button class="btn btn-primary" onclick="beepClick();goTo('scanner')">📷 ເລີ່ມສະແກນສິນຄ້າ</button>
       <button class="btn btn-secondary" onclick="beepClick();goTo('profile')">⚙️ ຈັດການສິນຄ້າ</button>
-      <button class="btn btn-secondary" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ປະຫວັດການຂາຍ</button>
+      <button class="btn btn-secondary" onclick="beepClick();loadBillsLocal();goTo('history')">📊 ປະຫວັດການຂາຍ</button>
       <button class="btn btn-secondary" onclick="beepClick();toggleFeatures()">ℹ️ ຂໍ້ມູນຟີເຈີ</button>
       <button class="btn btn-danger" onclick="beepErr();doLogout()">🔒 ອອກຈາກລະບົບ</button>
     </div>
@@ -542,7 +541,7 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
     <h2>📊 ປະຫວັດການຂາຍ</h2>
     <div style="display:flex;gap:6px">
       <button class="add-product-btn" style="background:rgba(0,255,136,0.15);color:var(--accent3);border:1px solid rgba(0,255,136,0.3);font-size:12px" onclick="beepClick();exportDailyReport()">📄 ສົ່ງອອກ</button>
-      <button class="add-product-btn" onclick="beepClick();loadBillsFromSupabase()">🔄 ໂຫລດໃໝ່</button>
+      <button class="add-product-btn" onclick="beepClick();loadBillsLocal()">🔄 ໂຫລດໃໝ່</button>
     </div>
   </div>
 
@@ -623,15 +622,12 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
   <div class="navbar">
     <button class="nav-btn" onclick="beepClick();goTo('scanner')">📷 ສະແກນ</button>
     <button class="nav-btn" onclick="beepClick();goTo('profile')">⚙️ ຈັດການ</button>
-    <button class="nav-btn active" onclick="beepClick();loadBillsFromSupabase();goTo('history')">📊 ປະຫວັດ</button>
+    <button class="nav-btn active" onclick="beepClick();loadBillsLocal();goTo('history')">📊 ປະຫວັດ</button>
   </div>
 </div>
 
 <script>
-// SUPABASE CONFIG
-const SUPABASE_URL = 'https://hobzzhzfzxmyomzbioqp.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhvYnp6aHpmenhteW9temJvaXFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NjI5MjYsImV4cCI6MjA5MzAzODkyNn0.1IxTxc_j7_riwQBROAwQ-qnWW7sE9OgAkXe3G2gTD44';
-
+// ເກັບຂໍ້ມູນທັງໝົດໃນເຄື່ອງ (localStorage only)
 const PIN_CODE = '884988';
 
 let pinBuffer = '';
@@ -711,6 +707,7 @@ function goTo(page) {
   document.getElementById(page).classList.add('active');
   if (page === 'scanner') startScanning();
   if (page === 'profile') renderProducts();
+  if (page === 'history') { bills = JSON.parse(localStorage.getItem('ss_bills') || '[]'); renderBills(); }
 }
 
 // CAMERA SCANNER — ZXing Real Barcode
@@ -973,19 +970,23 @@ function handleSlip(e) {
 
 function completeBill() {
   const slip = document.getElementById('slipPreview').src;
+  const hasSlip = slip && slip.startsWith('data:');
   const orderNum = document.getElementById('billOrderNum').textContent || ('BILL_' + Date.now());
 
   const billData = {
     id: orderNum,
-    date: new Date().toISOString(),
-    customer: document.getElementById('accountName').value || 'ລູກຄ້າທົ່ວໄປ',
-    account: document.getElementById('accountName').value || 'ບໍ່ລະບຸ',
+    bill_number: orderNum,
+    created_at: new Date().toISOString(),
+    account_name: document.getElementById('accountName').value || 'ລູກຄ້າທົ່ວໄປ',
     items: cart,
-    total: cart.reduce((s, i) => s + i.price * i.qty, 0),
-    slip: slip || null
+    total_amount: cart.reduce((s, i) => s + i.price * i.qty, 0),
+    slip_image: hasSlip ? slip : null
   };
-  
-  saveBillToSupabase(billData);
+
+  // ບັນທຶກລົງ localStorage ທັນທີ
+  bills.unshift(billData);
+  localStorage.setItem('ss_bills', JSON.stringify(bills));
+
   cart = [];
   renderCart();
   document.getElementById('slipInput').value = '';
@@ -1142,78 +1143,23 @@ function toggleFeatures() {
 function fmt(n) { return Number(n).toLocaleString('lo-LA', { minimumFractionDigits: 0 }); }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500); }
 
-// SUPABASE FUNCTIONS
-const sb = {
-  headers: {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  },
-  url(table, query='') { return `${SUPABASE_URL}/rest/v1/${table}${query}`; },
-  async post(table, body) {
-    try {
-      const r = await fetch(this.url(table), { method:'POST', headers:this.headers, body:JSON.stringify(body) });
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    } catch(e) {
-      console.warn('Supabase error:', e.message);
-      return null;
-    }
-  },
-  async get(table, query='') {
-    try {
-      const r = await fetch(this.url(table, query), { headers:this.headers });
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    } catch(e) {
-      console.warn('Supabase error:', e.message);
-      return [];
-    }
-  },
-  async delete(table, id) {
-    try {
-      const r = await fetch(this.url(table, `?id=eq.${id}`), { method:'DELETE', headers:this.headers });
-      if (!r.ok) throw new Error(await r.text());
-    } catch(e) {
-      console.warn('Supabase delete error:', e.message);
-    }
-  }
-};
+let bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
 
-let bills = [];
-
-async function saveBillToSupabase(billData) {
-  const result = await sb.post('bills', {
-    bill_number: billData.id,
-    customer_name: billData.customer || 'ບໍ່ລະບຸ',
-    account_name: billData.account,
-    total_amount: billData.total,
-    items_json: JSON.stringify(billData.items),
-    slip_image: billData.slip || null,
-    created_at: billData.date
-  });
-  
-  if (result) {
-    bills.unshift({ ...result, items: billData.items });
-    localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ ບັນທຶກບິນແລ້ວ');
-  }
+// ໂຫລດບິນຈາກ localStorage
+function loadBillsLocal() {
+  bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
+  renderBills();
+  toast('✅ ໂຫລດຂໍ້ມູນບິນ');
 }
 
-async function loadBillsFromSupabase() {
-  const result = await sb.get('bills', '?order=created_at.desc');
-  if (result && result.length > 0) {
-    bills = result.map(b => ({
-      ...b,
-      items: JSON.parse(b.items_json || '[]')
-    }));
-    localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ ໂຫລດຂໍ້ມູນບິນ');
-  } else {
-    bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
-  }
+// ລົບບິນ (localStorage ເທົ່ານັ້ນ)
+function deleteBill(billId) {
+  if (!confirm('ລົບບິນນີ້ແມ່ນບໍ?')) return;
+  bills = bills.filter(b => b.id !== billId);
+  localStorage.setItem('ss_bills', JSON.stringify(bills));
   renderBills();
+  beepOk();
+  toast('🗑️ ລົບບິນ');
 }
 
 // ======= DAILY REPORT =======
@@ -1424,17 +1370,6 @@ function showBillDetail(billId) {
   `;
   
   document.body.insertAdjacentHTML('beforeend', html);
-}
-
-async function deleteBill(billId) {
-  if (!confirm('ລົບບິນນີ້ແມ່ນບໍ?')) return;
-  
-  bills = bills.filter(b => b.id !== billId);
-  localStorage.setItem('ss_bills', JSON.stringify(bills));
-  await sb.delete('bills', billId);
-  renderBills();
-  beepOk();
-  toast('🗑️ ລົບບິນ');
 }
 
 // INIT
