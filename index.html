@@ -365,8 +365,22 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
-    <!-- Slip upload -->
+    <!-- Payment Method -->
     <div class="bill-card" style="padding:10px 14px">
+      <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">💰 ວິທີຊຳລະເງິນ</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
+        <button id="btnCash" onclick="setPayment('cash')" style="padding:12px 6px;border-radius:10px;border:2px solid var(--accent3);background:rgba(0,255,136,0.15);color:var(--accent3);font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;cursor:pointer">
+          💵 ເງິນສົດ
+        </button>
+        <button id="btnTransfer" onclick="setPayment('transfer')" style="padding:12px 6px;border-radius:10px;border:2px solid var(--border);background:transparent;color:var(--text-mid);font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;cursor:pointer">
+          📱 ໂອນເງິນ
+        </button>
+      </div>
+      <div id="paymentBadge" style="text-align:center;font-size:12px;color:var(--accent3);font-weight:700;margin-top:6px">💵 ເງິນສົດ</div>
+    </div>
+
+    <!-- Slip upload (shown only for transfer) -->
+    <div class="bill-card" id="slipSection" style="padding:10px 14px;display:none">
       <div style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📸 ສລິບໂອນເງິນ</div>
       <button class="bill-slip-btn" onclick="document.getElementById('slipInput').click()" id="slipUploadBtn">
         📸 ຖ່າຍຮູບ / ອັບໂຫລດສລິບ
@@ -580,6 +594,9 @@ body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-h
         <div style="font-size:20px;font-weight:900;color:var(--text-mid);font-family:'Space Mono',monospace" id="dailyAverage">₭0</div>
       </div>
     </div>
+
+    <!-- Payment split summary -->
+    <div id="paymentSplitReport" style="margin-bottom:8px"></div>
 
     <!-- Top selling items -->
     <div style="background:rgba(0,0,0,0.3);border-radius:10px;padding:10px 12px;margin-bottom:8px">
@@ -971,17 +988,52 @@ function handleSlip(e) {
   reader.readAsDataURL(file);
 }
 
+let currentPayment = 'cash'; // 'cash' | 'transfer'
+
+function setPayment(type) {
+  currentPayment = type;
+  const btnCash = document.getElementById('btnCash');
+  const btnTransfer = document.getElementById('btnTransfer');
+  const badge = document.getElementById('paymentBadge');
+  const slipSection = document.getElementById('slipSection');
+
+  if (type === 'cash') {
+    btnCash.style.border = '2px solid var(--accent3)';
+    btnCash.style.background = 'rgba(0,255,136,0.15)';
+    btnCash.style.color = 'var(--accent3)';
+    btnTransfer.style.border = '2px solid var(--border)';
+    btnTransfer.style.background = 'transparent';
+    btnTransfer.style.color = 'var(--text-mid)';
+    badge.textContent = '💵 ເງິນສົດ';
+    badge.style.color = 'var(--accent3)';
+    slipSection.style.display = 'none';
+  } else {
+    btnTransfer.style.border = '2px solid var(--accent)';
+    btnTransfer.style.background = 'rgba(0,229,255,0.15)';
+    btnTransfer.style.color = 'var(--accent)';
+    btnCash.style.border = '2px solid var(--border)';
+    btnCash.style.background = 'transparent';
+    btnCash.style.color = 'var(--text-mid)';
+    badge.textContent = '📱 ໂອນເງິນ';
+    badge.style.color = 'var(--accent)';
+    slipSection.style.display = 'block';
+  }
+}
+
 function completeBill() {
-  const slip = document.getElementById('slipPreview').src;
+  const slipEl = document.getElementById('slipPreview');
+  const slip = (currentPayment === 'transfer' && slipEl.style.display !== 'none') ? slipEl.src : null;
   const orderNum = document.getElementById('billOrderNum').textContent || ('BILL_' + Date.now());
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
   const billData = {
     id: orderNum,
     date: new Date().toISOString(),
     customer: document.getElementById('accountName').value || 'ລູກຄ້າທົ່ວໄປ',
     account: document.getElementById('accountName').value || 'ບໍ່ລະບຸ',
-    items: cart,
-    total: cart.reduce((s, i) => s + i.price * i.qty, 0),
+    items: JSON.parse(JSON.stringify(cart)), // deep copy
+    total: total,
+    paymentMethod: currentPayment,
     slip: slip || null
   };
   
@@ -989,7 +1041,10 @@ function completeBill() {
   cart = [];
   renderCart();
   document.getElementById('slipInput').value = '';
-  beepOk();
+  slipEl.style.display = 'none';
+  slipEl.src = '';
+  document.getElementById('slipUploadBtn').style.display = 'flex';
+  setPayment('cash'); // reset
   toast(`✅ ບັນທຶກບິນ ${orderNum} ສຳເລັດ!`);
   goTo('scanner');
 }
@@ -1278,33 +1333,58 @@ const sb = {
 let bills = [];
 
 async function saveBillToSupabase(billData) {
-  const result = await sb.post('bills', {
+  // ບັນທຶກ local ກ່ອນ (ໃຫ້ໄດ້ຮັບ offline ດ້ວຍ)
+  const localBill = {
+    id: billData.id,
     bill_number: billData.id,
     customer_name: billData.customer || 'ບໍ່ລະບຸ',
     account_name: billData.account,
     total_amount: billData.total,
+    items: billData.items,
     items_json: JSON.stringify(billData.items),
     slip_image: billData.slip || null,
+    payment_method: billData.paymentMethod || 'cash',
     created_at: billData.date
-  });
-  
-  if (result) {
-    bills.unshift({ ...result, items: billData.items });
-    localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ ບັນທຶກບິນແລ້ວ');
-  }
+  };
+  bills.unshift(localBill);
+  try { localStorage.setItem('ss_bills', JSON.stringify(bills.map(b => ({...b, slip_image: null})))); } catch(e) {}
+  renderBills();
+
+  // ອັບໂຫລດ Supabase (background)
+  try {
+    const result = await sb.post('bills', {
+      bill_number: billData.id,
+      customer_name: billData.customer || 'ບໍ່ລະບຸ',
+      account_name: billData.account,
+      total_amount: billData.total,
+      items_json: JSON.stringify(billData.items),
+      slip_image: billData.slip || null,
+      payment_method: billData.paymentMethod || 'cash',
+      created_at: billData.date
+    });
+    if (result) {
+      // update local id with supabase id
+      const idx = bills.findIndex(b => b.bill_number === billData.id);
+      if (idx >= 0) bills[idx] = { ...bills[idx], ...result, items: billData.items };
+    }
+  } catch(e) { console.warn('Supabase save error:', e); }
 }
 
 async function loadBillsFromSupabase() {
-  const result = await sb.get('bills', '?order=created_at.desc');
-  if (result && result.length > 0) {
-    bills = result.map(b => ({
-      ...b,
-      items: JSON.parse(b.items_json || '[]')
-    }));
-    localStorage.setItem('ss_bills', JSON.stringify(bills));
-    toast('✅ ໂຫລດຂໍ້ມູນບິນ');
-  } else {
+  try {
+    const result = await sb.get('bills', '?order=created_at.desc');
+    if (result && result.length > 0) {
+      bills = result.map(b => ({
+        ...b,
+        items: (() => { try { return JSON.parse(b.items_json || '[]'); } catch(e) { return []; } })(),
+        payment_method: b.payment_method || 'cash'
+      }));
+      try { localStorage.setItem('ss_bills', JSON.stringify(bills.map(b => ({...b, slip_image: null})))); } catch(e) {}
+      toast('✅ ໂຫລດຂໍ້ມູນບິນ');
+    } else {
+      bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
+    }
+  } catch(e) {
     bills = JSON.parse(localStorage.getItem('ss_bills') || '[]');
   }
   renderBills();
@@ -1331,14 +1411,42 @@ function renderDailyReport() {
   document.getElementById('reportDateLabel').textContent = '📅 ' + dateLabel;
 
   // Stats
-  const totalRevenue = todayBills.reduce((s,b) => s + (b.total_amount || 0), 0);
-  const totalItems   = todayBills.reduce((s,b) => s + (b.items || []).reduce((ss,i) => ss + (i.qty||1), 0), 0);
-  const avgPerBill   = todayBills.length ? (totalRevenue / todayBills.length) : 0;
+  const totalRevenue   = todayBills.reduce((s,b) => s + (b.total_amount || 0), 0);
+  const cashBills      = todayBills.filter(b => (b.payment_method || 'cash') === 'cash');
+  const transferBills  = todayBills.filter(b => (b.payment_method || 'cash') === 'transfer');
+  const cashTotal      = cashBills.reduce((s,b) => s + (b.total_amount || 0), 0);
+  const transferTotal  = transferBills.reduce((s,b) => s + (b.total_amount || 0), 0);
+  const totalItems     = todayBills.reduce((s,b) => s + (b.items || []).reduce((ss,i) => ss + (i.qty||1), 0), 0);
+  const avgPerBill     = todayBills.length ? (totalRevenue / todayBills.length) : 0;
 
-  document.getElementById('dailyTotal').textContent      = '₭' + fmt(totalRevenue);
-  document.getElementById('dailyBillCount').textContent  = todayBills.length + ' ບິນ';
-  document.getElementById('dailyItemCount').textContent  = totalItems + ' ຊິ້ນ';
-  document.getElementById('dailyAverage').textContent    = '₭' + fmt(Math.round(avgPerBill));
+  document.getElementById('dailyTotal').textContent     = '₭' + fmt(totalRevenue);
+  document.getElementById('dailyBillCount').textContent = todayBills.length + ' ບິນ';
+  document.getElementById('dailyItemCount').textContent = totalItems + ' ຊິ້ນ';
+  document.getElementById('dailyAverage').textContent   = '₭' + fmt(Math.round(avgPerBill));
+
+  // Payment split — inject below stats cards
+  const splitEl = document.getElementById('paymentSplitReport');
+  if (splitEl) {
+    splitEl.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">💵</div>
+          <div style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px">ເງິນສົດ</div>
+          <div style="font-size:16px;font-weight:900;color:var(--accent3);margin-top:4px">₭${fmt(cashTotal)}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${cashBills.length} ບິນ</div>
+        </div>
+        <div style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">📱</div>
+          <div style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px">ໂອນເງິນ</div>
+          <div style="font-size:16px;font-weight:900;color:var(--accent);margin-top:4px">₭${fmt(transferTotal)}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:2px">${transferBills.length} ບິນ</div>
+        </div>
+      </div>
+      <div style="background:var(--surface3);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text-mid);font-weight:700">💰 ລວມທັງໝົດ</span>
+        <span style="font-size:18px;font-weight:900;color:var(--accent4)">₭${fmt(totalRevenue)}</span>
+      </div>`;
+  }
 
   // Top selling items
   const itemMap = {};
@@ -1407,8 +1515,13 @@ function buildBillCard(bill, showDate) {
       <div style="font-weight:700;font-size:12px;color:var(--accent);">${bill.bill_number}</div>
       <div style="font-size:10px;color:var(--text-dim);margin-top:3px">🕐 ${dateStr}${timeStr}</div>
       <div style="font-size:11px;margin-top:5px;color:var(--text-mid)">🛍️ ${totalItems} ຊິ້ນ (${(bill.items||[]).length} ລາຍການ)</div>
-      <div style="font-weight:700;color:var(--accent3);font-size:15px;margin-top:5px">₭${fmt(bill.total_amount)}</div>
-      ${bill.slip_image ? '<div style="font-size:9px;color:var(--accent3);margin-top:3px">📸 ມີສລິບ</div>' : ''}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <div style="font-weight:700;color:var(--accent3);font-size:15px">₭${fmt(bill.total_amount)}</div>
+        <div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;${(bill.payment_method||'cash')==='transfer' ? 'background:rgba(0,229,255,0.12);color:var(--accent)' : 'background:rgba(0,255,136,0.12);color:var(--accent3)'}">
+          ${(bill.payment_method||'cash')==='transfer' ? '📱ໂອນ' : '💵ສົດ'}
+        </div>
+        ${bill.slip_image ? '<div style="font-size:10px;color:var(--accent3)">📸</div>' : ''}
+      </div>
       <button onclick="event.stopPropagation();beepErr();deleteBill('${bill.id}')" style="position:absolute;top:8px;right:8px;background:rgba(255,61,113,0.2);border:none;color:var(--accent2);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px">✕</button>
     </div>`;
 }
@@ -1479,43 +1592,64 @@ function showBillDetail(billId) {
   
   const date = new Date(bill.created_at);
   const dateStr = date.toLocaleDateString('lo-LA', { year: 'numeric', month: 'long', day: 'numeric' });
-  const timeStr = date.toLocaleTimeString('lo-LA');
-  
+  const timeStr = date.toLocaleTimeString('lo-LA', {hour:'2-digit', minute:'2-digit'});
+  const isPay = (bill.payment_method || 'cash') === 'transfer';
+  const payLabel = isPay ? '📱 ໂອນເງິນ' : '💵 ເງິນສົດ';
+  const payColor = isPay ? 'var(--accent)' : 'var(--accent3)';
+
   let itemsHtml = '';
-  bill.items.forEach(item => {
+  (bill.items || []).forEach(item => {
+    const lineTotal = (item.price || 0) * (item.qty || 1);
     itemsHtml += `
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
-        <span>${item.name || item.name} × ${item.qty}</span>
-        <span style="color:var(--accent3);font-weight:700">₭${fmt(item.price * item.qty)}</span>
-      </div>
-    `;
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;gap:8px">
+        <div style="flex:1">
+          <div style="font-weight:600">${item.name || '—'}</div>
+          <div style="color:var(--text-dim);font-size:11px;margin-top:2px">₭${fmt(item.price||0)} × ${item.qty||1} ຊິ້ນ</div>
+        </div>
+        <span style="color:var(--accent3);font-weight:700;white-space:nowrap">₭${fmt(lineTotal)}</span>
+      </div>`;
   });
   
   const html = `
-    <div style="position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(5px)">
-      <div style="background:var(--surface);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:80dvh;overflow-y:auto">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="float:right;background:none;border:none;color:var(--accent);font-size:24px;cursor:pointer">✕</button>
+    <div style="position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)">
+      <div style="background:var(--surface);border-radius:16px;padding:20px;width:100%;max-width:400px;max-height:88dvh;overflow-y:auto">
         
-        <div style="text-align:center;margin-bottom:16px">
-          <h3 style="font-size:16px;font-weight:700;margin-bottom:4px">${bill.bill_number}</h3>
-          <p style="color:var(--text-dim);font-size:12px">${dateStr} ເວລາ ${timeStr}</p>
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+          <div>
+            <div style="font-size:16px;font-weight:900;color:var(--accent)">${bill.bill_number}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px">📅 ${dateStr} · 🕐 ${timeStr}</div>
+            ${bill.account_name ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">👤 ${bill.account_name}</div>` : ''}
+          </div>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="background:rgba(255,255,255,0.08);border:none;color:var(--text-dim);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px">✕</button>
         </div>
-        
-        <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:12px">
-          <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px">📱 ບັນຊີ: ${bill.account_name}</div>
-          ${itemsHtml}
-          <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1.5px solid var(--border);margin-top:10px;font-weight:700;font-size:14px;color:var(--accent3)">
-            <span>ລວມ:</span>
-            <span>₭${fmt(bill.total_amount)}</span>
+
+        <!-- Payment badge -->
+        <div style="display:inline-block;background:${isPay ? 'rgba(0,229,255,0.12)' : 'rgba(0,255,136,0.12)'};border:1px solid ${payColor};border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;color:${payColor};margin-bottom:14px">
+          ${payLabel}
+        </div>
+
+        <!-- Items -->
+        <div style="background:var(--surface2);border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📦 ລາຍການສິນຄ້າ</div>
+          ${itemsHtml || '<div style="color:var(--text-dim);font-size:12px;text-align:center;padding:10px">ບໍ່ມີຂໍ້ມູນ</div>'}
+          <!-- Total -->
+          <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1.5px solid var(--border);margin-top:8px">
+            <span style="font-size:13px;font-weight:700;color:var(--text-dim)">ຍອດລວມ</span>
+            <span style="font-size:20px;font-weight:900;color:var(--accent3)">₭${fmt(bill.total_amount)}</span>
           </div>
         </div>
+
+        <!-- Slip image -->
+        ${bill.slip_image ? `
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--text-dim);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📸 ສລິບໂອນເງິນ</div>
+          <img src="${bill.slip_image}" style="width:100%;border-radius:10px;border:1px solid var(--border)">
+        </div>` : ''}
         
-        ${bill.slip_image ? `<img src="${bill.slip_image}" style="width:100%;border-radius:10px;margin-bottom:12px">` : ''}
-        
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:10px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:10px;font-family:'Kanit',sans-serif;font-weight:700;cursor:pointer">ປິດ</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),#007acc);color:#000;border:none;border-radius:12px;font-family:'Kanit',sans-serif;font-weight:700;font-size:15px;cursor:pointer">ປິດ</button>
       </div>
-    </div>
-  `;
+    </div>`;
   
   document.body.insertAdjacentHTML('beforeend', html);
 }
